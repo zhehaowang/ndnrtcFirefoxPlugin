@@ -29,6 +29,7 @@
 #include "ndnrtc-library.h"
 
 #include "BrowserRenderer.h"
+#include "ScriptableObject.h"
 
 using namespace ndnrtc;
 
@@ -157,8 +158,12 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     //libInstance->startPublishing("zhehao", bRenderer);
     libInstance->startFetching("remap-512", bRenderer);
     
+    // The point of npruntime.h is just to provide what the interface(between what and what) should look like?
     //NPObject *newObj = NPN_CreateObject(instance, &(MyScriptableNPObject::_npclass));
     //NPN_RetainObject(newObj);
+    
+    NPObject *newObj = browser->createobject(instance, &(MyScriptableNPObject::_npclass));
+    browser->retainobject(newObj);
     
     renderBuffer = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
     bzero(renderBuffer, videoParams.renderHeight * videoParams.renderHeight * 3);

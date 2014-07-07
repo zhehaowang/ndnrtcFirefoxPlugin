@@ -19,12 +19,16 @@ protected:
     // Class member functions that do the real work
     void Deallocate();
     void Invalidate();
+    
     bool HasMethod(NPIdentifier name);
+    
     bool Invoke(NPIdentifier name, const NPVariant *args, uint32_t argCount, NPVariant *result);
     bool InvokeDefault(const NPVariant *args, uint32_t argCount, NPVariant *result);
+    
     bool HasProperty(NPIdentifier name);
     bool GetProperty(NPIdentifier name, NPVariant *result);
     bool SetProperty(NPIdentifier name, const NPVariant *value);
+    
     bool RemoveProperty(NPIdentifier name);
     bool Enumerate(NPIdentifier **identifier, uint32_t *count);
     bool Construct(const NPVariant *args, uint32_t argCount, NPVariant *result);
@@ -54,7 +58,6 @@ public:
     static bool _Construct(NPObject *npobj, const NPVariant *args, uint32_t argCount, NPVariant *result);
     
     static NPClass _npclass;
-    
 protected:
     NPP instance_;
 };
