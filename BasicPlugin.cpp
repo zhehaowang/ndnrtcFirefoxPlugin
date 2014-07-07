@@ -29,7 +29,9 @@
 #include "ndnrtc-library.h"
 
 #include "BrowserRenderer.h"
-#include "ScriptableObject.h"
+
+#define STRINGS_PRODUCTNAME "ndnrtc-plugin"
+#define STRINGS_FILEDESCRIPTION "Test description"
 
 using namespace ndnrtc;
 
@@ -37,6 +39,9 @@ using namespace ndnrtc;
 uint8_t *renderBuffer;
 
 std::mutex renderBufferLock;
+
+// The npobject to pass into the browser. Made global so that only one copy exists at a time
+NPObject *scriptableObj;
 
 /* Symbol called once by the browser to initialize the plugin. */
 NPError NP_Initialize(NPNetscapeFuncs* browserFuncs)
@@ -68,6 +73,8 @@ NPError NP_GetEntryPoints(NPPluginFuncs* pluginFuncs)
     pluginFuncs->urlnotify = NPP_URLNotify;
     pluginFuncs->getvalue = NPP_GetValue;
     pluginFuncs->setvalue = NPP_SetValue;
+    
+    //pluginFuncs->
     
     return NPERR_NO_ERROR;
 }
@@ -158,13 +165,6 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     //libInstance->startPublishing("zhehao", bRenderer);
     libInstance->startFetching("remap-512", bRenderer);
     
-    // The point of npruntime.h is just to provide what the interface(between what and what) should look like?
-    //NPObject *newObj = NPN_CreateObject(instance, &(MyScriptableNPObject::_npclass));
-    //NPN_RetainObject(newObj);
-    
-    NPObject *newObj = browser->createobject(instance, &(MyScriptableNPObject::_npclass));
-    browser->retainobject(newObj);
-    
     renderBuffer = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
     bzero(renderBuffer, videoParams.renderHeight * videoParams.renderHeight * 3);
     
@@ -241,9 +241,49 @@ void NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyD
     
 }
 
+// This function is called by NPP_GetValue, which is passed into the browser via function table.
+NPObject* NPP_GetScriptableObject(NPP npp)
+{
+    NPObject *returnObj;
+    if (scriptableObj != NULL)
+    {
+        returnObj = (NPObject *)scriptableObj;
+    }
+    else
+    {
+        // The point of npruntime.h is just to provide what the interface(between what and what) should look like?
+        // As NPN_ScheduleTimer, the following npn functions are called from browser instance.
+        //NPObject *newObj = NPN_CreateObject(instance, &(MyScriptableNPObject::_npclass));
+        //NPN_RetainObject(newObj);
+        
+        scriptableObj = browser->createobject(npp, &(MyScriptableNPObject::_npclass));
+    }
+    browser->retainobject(scriptableObj);
+    return returnObj;
+}
+
+// ScriptableObject is passed through GetValue, by specifying a certain NPVariable type.
 NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 {
-    return NPERR_GENERIC_ERROR;
+    NPError rv = NPERR_NO_ERROR;
+    switch(variable)
+    {
+        case NPPVpluginNameString:
+            value = *((char **)value) = STRINGS_PRODUCTNAME;
+            break;
+        case NPPVpluginDescriptionString:    // Plugin description
+            *((char **)value) = STRINGS_FILEDESCRIPTION;
+            break;
+        case NPPVpluginScriptableNPObject:// Scriptable plugin interface (for accessing from javascript)
+            *(NPObject **)value = NPP_GetScriptableObject(instance);
+            break;
+        case NPPVpluginWindowBool:
+            //*((PRBool *)value) = this->isWindowed;
+            break;
+        default:
+            rv = NPERR_GENERIC_ERROR;
+    }
+    return rv;
 }
 
 NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
