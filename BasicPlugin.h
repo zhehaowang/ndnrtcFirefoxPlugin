@@ -22,6 +22,7 @@
 // headers know we're compiling for Mac OS X.
 #include "npapiHeaders/npapi.h"
 #include "npapiHeaders/npfunctions.h"
+#include "ScriptableObject.h"
 
 #include <mutex>
 

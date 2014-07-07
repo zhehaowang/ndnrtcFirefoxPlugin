@@ -32,8 +32,6 @@
 
 using namespace ndnrtc;
 
-std::mutex debugLock;
-
 //distinguish between extern declarations in headers, and static (only) declaration in headers
 uint8_t *renderBuffer;
 
@@ -141,12 +139,12 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     libInstance->getDefaultParams(videoParams, audioParams);
     
     printf("***\t***\n");
-    printf("BUILD NUMBER: %d\n", libInstance->getBuildNumber());
+    printf("***BUILD NUMBER: %d\n", libInstance->getBuildNumber());
     
     videoParams.producerId = "zhehao";
     
     //videoParams.useFec = false;
-    // Ah so segment size differs from the default one.
+    // So segment size differs from the default one.
     videoParams.segmentSize = 800;
     
     videoParams.ndnHub = "ndn/edu/ucla/remap";
@@ -158,6 +156,9 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     
     //libInstance->startPublishing("zhehao", bRenderer);
     libInstance->startFetching("remap-512", bRenderer);
+    
+    //NPObject *newObj = NPN_CreateObject(instance, &(MyScriptableNPObject::_npclass));
+    //NPN_RetainObject(newObj);
     
     renderBuffer = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
     bzero(renderBuffer, videoParams.renderHeight * videoParams.renderHeight * 3);
@@ -259,6 +260,12 @@ void drawDataInRect(CGContextRef context, CGRect frame, size_t width, size_t hei
         alphaBuffer[i++] = renderBuffer[j++];
         alphaBuffer[i++] = renderBuffer[j++];
         alphaBuffer[i++] = renderBuffer[j++];
+        
+        // wonder why this gives a different result:
+        
+        //memcpy(alphaBuffer+i, renderBuffer+j, 3);
+        //i+=3;
+        //j+=3;
         // a random alpha
         alphaBuffer[i++] = 0;
     }
