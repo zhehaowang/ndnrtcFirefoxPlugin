@@ -48,7 +48,8 @@ bool MyScriptableNPObject::_Invoke(NPObject *npobj, NPIdentifier name, const NPV
     return true;
 }
 bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint32_t argCount, NPVariant *result)
-{
+{   
+    printf("\n*** Method invoked. ***\n");
     return true;
 }
 
@@ -60,6 +61,7 @@ bool MyScriptableNPObject::_InvokeDefault(NPObject *npobj, const NPVariant *args
 }
 bool MyScriptableNPObject::InvokeDefault(const NPVariant *args, uint32_t argCount, NPVariant *result)
 {
+    printf("\n*** Method invoked by InvokeDefault. ***\n");
     return true;
 }
 

@@ -274,7 +274,9 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
         case NPPVpluginDescriptionString:    // Plugin description
             *((char **)value) = STRINGS_FILEDESCRIPTION;
             break;
-        case NPPVpluginScriptableNPObject:// Scriptable plugin interface (for accessing from javascript)
+        case NPPVpluginScriptableNPObject:
+            // Scriptable plugin interface (for accessing from javascript)
+            // this is a most interesting expression of getting scriptable object
             *(NPObject **)value = NPP_GetScriptableObject(instance);
             break;
         case NPPVpluginWindowBool:
