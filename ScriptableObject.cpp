@@ -7,6 +7,9 @@
 //
 
 #include "ScriptableObject.h"
+#include "BasicPlugin.h"
+
+#define PLUGIN_VERSION "v0.1"
 
 MyScriptableNPObject::MyScriptableNPObject(NPP instance)
 {
@@ -33,24 +36,64 @@ void MyScriptableNPObject::Deallocate() {
 // static
 bool MyScriptableNPObject::_HasMethod(NPObject *npobj, NPIdentifier name)
 {
-    ((MyScriptableNPObject*)npobj)->HasMethod(name);
-    return true;
+    return ((MyScriptableNPObject*)npobj)->HasMethod(name);
 }
 bool MyScriptableNPObject::HasMethod(NPIdentifier name)
 {
-    return true;
+    // getstringidentifier crashes, could it because that cross-thread reference of getstringidentifier is not allowed?
+    // Figure out: what is actually passed to the browser. The npobject, or the wrapper class; if it's the former...the browser still can refer to the wrapper class via the class's actual implementation instead of the static skeletons; and those implementation has access to the wrapper class's members.
+    
+    //NPIdentifier debugStr[6] = {'c', 'r', 'a', 's', 'h'};
+    
+    // calling getstringidentifier directly results in the crash
+    
+    //char debugStr[6] = "crash";
+    //browser->getstringidentifier(debugStr);
+    //NPN_GetStringIdentifier("crash");
+    
+    printf("*** HasMethod function called. ***\n");
+    
+    bool hasMethod = false;
+    
+    // UTF8FromIdentifier and GetStringIdentifier does not work for this thread?
+    // crashing point
+    //printf("*** Name it's trying to lookup : %s. ***\n", NPN_UTF8FromIdentifier(name));
+    
+    /*
+    if (name == getVersionId_)
+    {
+        printf("*** Has method by the name of getVersion. ***\n");
+        hasMethod = true;
+    }
+    */
+    
+    return hasMethod;
 }
 
 // static
 bool MyScriptableNPObject::_Invoke(NPObject *npobj, NPIdentifier name, const NPVariant *args, uint32_t argCount, NPVariant *result)
 {
-    ((MyScriptableNPObject*)npobj)->Invoke(name, args, argCount, result);
-    return true;
+    return ((MyScriptableNPObject*)npobj)->Invoke(name, args, argCount, result); 
 }
 bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint32_t argCount, NPVariant *result)
-{   
-    printf("\n*** Method invoked. ***\n");
-    return true;
+{
+    bool rc = false;
+    char* wptr = NULL;
+    printf("*** Invoke function called. ***\n");
+    
+    if  (name == browser->getstringidentifier("getVersion"))
+    {
+        printf("*** Tring to print version. ***\n");
+        wptr = (NPUTF8*)(browser->memalloc(strlen(PLUGIN_VERSION) + 1)); //Should be freed by browser
+        if  (wptr != NULL)
+        {
+            rc = true;
+            memset(wptr, 0x00, strlen(PLUGIN_VERSION) + 1);
+            memcpy(wptr, PLUGIN_VERSION, strlen(PLUGIN_VERSION));
+            STRINGZ_TO_NPVARIANT(wptr, *result);
+        }
+    }
+    return (rc);
 }
 
 //static
@@ -148,3 +191,8 @@ NPClass MyScriptableNPObject::_npclass = {
     MyScriptableNPObject::_Enumerate,
     MyScriptableNPObject::_Construct
 };
+
+MyScriptableNPObject* MyScriptableNPObject::NewObject(NPP npp) {
+    MyScriptableNPObject* newObj = (MyScriptableNPObject*)(browser->createobject(npp, &_npclass));
+    return newObj;
+}

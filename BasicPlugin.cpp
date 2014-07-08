@@ -46,7 +46,9 @@ NPObject *scriptableObj;
 /* Symbol called once by the browser to initialize the plugin. */
 NPError NP_Initialize(NPNetscapeFuncs* browserFuncs)
 {
-    /* Save the browser function table. The ones with NPN_ are browser functions, handles the event usually fired from browser */
+    /* Save the browser function table. The ones with NPN_ are browser functions, handles the event usually fired from browser.
+     Headers included in this plugin project contain the definitions for (pointers to) NPN function prototypes. The actual functions implementatioins are passed in from this initialization function.
+     */
     browser = browserFuncs;
     
     return NPERR_NO_ERROR;
@@ -244,22 +246,18 @@ void NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyD
 // This function is called by NPP_GetValue, which is passed into the browser via function table.
 NPObject* NPP_GetScriptableObject(NPP npp)
 {
-    NPObject *returnObj;
-    if (scriptableObj != NULL)
-    {
-        returnObj = (NPObject *)scriptableObj;
-    }
-    else
+    if (scriptableObj == NULL)
     {
         // The point of npruntime.h is just to provide what the interface(between what and what) should look like?
         // As NPN_ScheduleTimer, the following npn functions are called from browser instance.
         //NPObject *newObj = NPN_CreateObject(instance, &(MyScriptableNPObject::_npclass));
         //NPN_RetainObject(newObj);
         
+        // GetValue is also fired from another thread...it goes against the theory that NetscapeFuncs->functions shouldn't be called in another thread.
         scriptableObj = browser->createobject(npp, &(MyScriptableNPObject::_npclass));
     }
     browser->retainobject(scriptableObj);
-    return returnObj;
+    return scriptableObj;
 }
 
 // ScriptableObject is passed through GetValue, by specifying a certain NPVariable type.
@@ -277,7 +275,8 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
         case NPPVpluginScriptableNPObject:
             // Scriptable plugin interface (for accessing from javascript)
             // this is a most interesting expression of getting scriptable object
-            *(NPObject **)value = NPP_GetScriptableObject(instance);
+            *((NPObject **)value) = NPP_GetScriptableObject(instance);
+            printf("*** Trying to get a scriptable object. ***\n");
             break;
         case NPPVpluginWindowBool:
             //*((PRBool *)value) = this->isWindowed;

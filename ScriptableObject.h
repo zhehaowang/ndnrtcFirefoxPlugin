@@ -12,6 +12,8 @@
 #include "npapiHeaders/npapi.h"
 #include "npapiHeaders/npfunctions.h"
 
+#include "BasicPlugin.h"
+
 // Scriptable object example used for callback from Javascript
 class MyScriptableNPObject : public NPObject
 {
@@ -32,6 +34,7 @@ protected:
     bool RemoveProperty(NPIdentifier name);
     bool Enumerate(NPIdentifier **identifier, uint32_t *count);
     bool Construct(const NPVariant *args, uint32_t argCount, NPVariant *result);
+    
 public:
     MyScriptableNPObject(NPP instance);
     
@@ -41,7 +44,7 @@ public:
     static NPObject* Allocate(NPP npp, NPClass *aClass) {
         return (NPObject *)new MyScriptableNPObject(npp);
     }
-    
+
     /////////////////////////////
     // Static NPObject methods //
     /////////////////////////////
@@ -57,7 +60,11 @@ public:
     static bool _Enumerate(NPObject *npobj, NPIdentifier **identifier, uint32_t *count);
     static bool _Construct(NPObject *npobj, const NPVariant *args, uint32_t argCount, NPVariant *result);
     
+    static MyScriptableNPObject* NewObject(NPP npp);
+    
     static NPClass _npclass;
+    
+    //static NPIdentifier getVersionId_;
 protected:
     NPP instance_;
 };
