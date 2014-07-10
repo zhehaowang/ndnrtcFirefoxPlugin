@@ -31,6 +31,8 @@ static const NPUTF8 *pluginPropertyNames[PLUGIN_PROPERTY_NUM] = {
     "version"
 };
 
+extern char *versionStr;
+
 // Scriptable object example used for callback from Javascript
 class MyScriptableNPObject : public NPObject
 {

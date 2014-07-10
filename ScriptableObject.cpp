@@ -9,10 +9,10 @@
 #include "ScriptableObject.h"
 #include "BasicPlugin.h"
 
-#define PLUGIN_VERSION "v0.1"
-
 NPIdentifier pluginMethods[PLUGIN_METHOD_NUM];
 NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
+
+char * versionStr = NULL;
 
 MyScriptableNPObject::MyScriptableNPObject(NPP instance)
 {
@@ -79,21 +79,23 @@ bool MyScriptableNPObject::_Invoke(NPObject *npobj, NPIdentifier name, const NPV
 bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint32_t argCount, NPVariant *result)
 {
     bool rc = false;
-    char* wptr = NULL;
     printf("*** Invoke function called. ***\n");
     
+    // Whenever browser does not try to get a scriptable object before invoking this method, the plugin crashes.
     if  (name == pluginMethods[ID_GET_VERSION])
     {
         printf("*** Tring to print version. ***\n");
-        wptr = (NPUTF8*)(browser->memalloc(strlen(PLUGIN_VERSION) + 1)); //Should be freed by browser
-        if  (wptr != NULL)
+        
+        // versionStr is allocated in main thread, globally
+        if  (versionStr != NULL)
         {
             rc = true;
-            memset(wptr, 0x00, strlen(PLUGIN_VERSION) + 1);
-            memcpy(wptr, PLUGIN_VERSION, strlen(PLUGIN_VERSION));
-            STRINGZ_TO_NPVARIANT(wptr, *result);
+            memset(versionStr, 0x00, strlen(PLUGIN_VERSION) + 1);
+            memcpy(versionStr, PLUGIN_VERSION, strlen(PLUGIN_VERSION));
+            STRINGZ_TO_NPVARIANT(versionStr, *result);
         }
     }
+    
     return (rc);
 }
 

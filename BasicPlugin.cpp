@@ -124,6 +124,11 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     
     /* Initialize identifiers */
     browser->getstringidentifiers(pluginMethodNames, PLUGIN_METHOD_NUM, pluginMethods);
+    browser->getstringidentifiers(pluginPropertyNames, PLUGIN_PROPERTY_NUM, pluginProperties);
+    
+    /* Browser memory allocation */
+    versionStr = (NPUTF8*)(browser->memalloc(strlen(PLUGIN_VERSION) + 1));
+    // This should be freed by browser?
     
     /* Select the Core Graphics drawing model. */
     NPBool supportsCoreGraphics = false;
@@ -282,9 +287,7 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
             break;
         case NPPVpluginScriptableNPObject:
             // Scriptable plugin interface (for accessing from javascript)
-            // this is a most interesting expression of getting scriptable object
-            
-            // Get value is temporarily disabled
+            // The calling model for this function is like what?
             
             *((NPObject **)value) = NPP_GetScriptableObject(instance);
             printf("*** Trying to get a scriptable object. ***\n");

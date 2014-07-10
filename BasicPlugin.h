@@ -26,6 +26,8 @@
 
 #include <mutex>
 
+#define PLUGIN_VERSION "v0.1"
+
 /* According to MDN's reference https://developer.mozilla.org/en-US/Add-ons/Plugins/Writing_a_plugin_for_Mac_OS_X
  * these 3 functions should be made visible to the caller in a C style, as signified by the extern statement below */
 
