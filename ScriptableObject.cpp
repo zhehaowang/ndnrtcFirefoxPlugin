@@ -11,6 +11,9 @@
 
 #define PLUGIN_VERSION "v0.1"
 
+NPIdentifier pluginMethods[PLUGIN_METHOD_NUM];
+NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
+
 MyScriptableNPObject::MyScriptableNPObject(NPP instance)
 {
     instance_ = instance;
@@ -53,21 +56,19 @@ bool MyScriptableNPObject::HasMethod(NPIdentifier name)
     
     printf("*** HasMethod function called. ***\n");
     
-    bool hasMethod = false;
+    // browser->UTF8FromIdentifier and browser->GetStringIdentifier does not work for this thread?
+    // crashes at NPN_UTF8FromIdentifier, storing it at the initializatong phase also crashes...
     
-    // UTF8FromIdentifier and GetStringIdentifier does not work for this thread?
-    // crashing point
     //printf("*** Name it's trying to lookup : %s. ***\n", NPN_UTF8FromIdentifier(name));
-    
-    /*
-    if (name == getVersionId_)
+    int i = 0;
+    for (i = 0; i < PLUGIN_METHOD_NUM; i++)
     {
-        printf("*** Has method by the name of getVersion. ***\n");
-        hasMethod = true;
+        if (name == pluginMethods[i])
+        {
+            return true;
+        }
     }
-    */
-    
-    return hasMethod;
+    return false;
 }
 
 // static
@@ -81,7 +82,7 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
     char* wptr = NULL;
     printf("*** Invoke function called. ***\n");
     
-    if  (name == browser->getstringidentifier("getVersion"))
+    if  (name == pluginMethods[ID_GET_VERSION])
     {
         printf("*** Tring to print version. ***\n");
         wptr = (NPUTF8*)(browser->memalloc(strlen(PLUGIN_VERSION) + 1)); //Should be freed by browser

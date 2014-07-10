@@ -47,8 +47,6 @@ static NPNetscapeFuncs* browser;
 extern uint8_t *renderBuffer;
 extern std::mutex renderBufferLock;
 
-//static NPIdentifier getVersionId_ = browser->getstringidentifier("getVersion");
-
 #pragma GCC visibility push(default)
 extern "C" {
     NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);

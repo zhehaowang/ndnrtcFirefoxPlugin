@@ -14,6 +14,23 @@
 
 #include "BasicPlugin.h"
 
+#define PLUGIN_METHOD_NUM 1
+#define PLUGIN_PROPERTY_NUM 1
+
+extern NPIdentifier pluginMethods[PLUGIN_METHOD_NUM];
+static const NPUTF8 *pluginMethodNames[PLUGIN_METHOD_NUM] = {
+    "getVersion"
+};
+
+enum {
+    ID_GET_VERSION = 0
+};
+
+extern NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
+static const NPUTF8 *pluginPropertyNames[PLUGIN_PROPERTY_NUM] = {
+    "version"
+};
+
 // Scriptable object example used for callback from Javascript
 class MyScriptableNPObject : public NPObject
 {

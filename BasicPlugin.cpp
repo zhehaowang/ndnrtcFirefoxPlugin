@@ -108,6 +108,11 @@ void refreshTimerFunc(NPP instance, uint32_t timerID)
     return;
 }
 
+static void initializeIdentifiers()
+{
+    //pluginMethods[0] = browser->getstringidentifier(pluginMethodNames[0]);
+}
+
 /* Called to create a new instance of the plugin. */
 NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
@@ -116,6 +121,9 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     
     pluginInstance->npp = instance;
     instance->pdata = pluginInstance;
+    
+    /* Initialize identifiers */
+    browser->getstringidentifiers(pluginMethodNames, PLUGIN_METHOD_NUM, pluginMethods);
     
     /* Select the Core Graphics drawing model. */
     NPBool supportsCoreGraphics = false;
@@ -275,6 +283,9 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
         case NPPVpluginScriptableNPObject:
             // Scriptable plugin interface (for accessing from javascript)
             // this is a most interesting expression of getting scriptable object
+            
+            // Get value is temporarily disabled
+            
             *((NPObject **)value) = NPP_GetScriptableObject(instance);
             printf("*** Trying to get a scriptable object. ***\n");
             break;
