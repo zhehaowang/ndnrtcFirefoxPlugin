@@ -82,6 +82,7 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
     printf("*** Invoke function called. ***\n");
     
     // Whenever browser does not try to get a scriptable object before invoking this method, the plugin crashes.
+    /*
     if  (name == pluginMethods[ID_GET_VERSION])
     {
         printf("*** Tring to print version. ***\n");
@@ -93,6 +94,21 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             memset(versionStr, 0x00, strlen(PLUGIN_VERSION) + 1);
             memcpy(versionStr, PLUGIN_VERSION, strlen(PLUGIN_VERSION));
             STRINGZ_TO_NPVARIANT(versionStr, *result);
+        }
+    }
+    */
+    
+    if  (name == pluginMethods[ID_GET_VERSION])
+    {
+        printf("*** Tring to print version. ***\n");
+        char * returnStr = (NPUTF8*)(browser->memalloc(strlen(PLUGIN_VERSION) + 1));
+        // versionStr is allocated in main thread, globally
+        if  (returnStr != NULL)
+        {
+            rc = true;
+            memset(returnStr, 0x00, strlen(PLUGIN_VERSION) + 1);
+            memcpy(returnStr, PLUGIN_VERSION, strlen(PLUGIN_VERSION));
+            STRINGZ_TO_NPVARIANT(returnStr, *result);
         }
     }
     

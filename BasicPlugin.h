@@ -43,7 +43,7 @@ typedef struct PluginInstance {
 }PluginInstance;
 
 /* Structure containing pointers to functions implemented by the browser. */
-static NPNetscapeFuncs* browser;
+extern NPNetscapeFuncs* browser;
 
 // interesting that without static it does not work; with static it's semantically incorrect; the semantically correct way is below.
 extern uint8_t *renderBuffer;
