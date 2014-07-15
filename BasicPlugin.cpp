@@ -26,14 +26,11 @@
 // Error messages telling the key used being wrong start to arise
 
 #include "BasicPlugin.h"
-#include "ndnrtc-library.h"
 
 #include "BrowserRenderer.h"
 
 #define STRINGS_PRODUCTNAME "ndnrtc-plugin"
 #define STRINGS_FILEDESCRIPTION "Test description"
-
-using namespace ndnrtc;
 
 //distinguish between extern declarations in headers, and static (only) declaration in headers
 uint8_t *renderBuffer;
@@ -41,6 +38,8 @@ uint8_t *renderBuffer;
 std::mutex renderBufferLock;
 
 NPNetscapeFuncs* browser;
+
+NdnRtcLibrary * libInstance;
 
 // The npobject to pass into the browser. Made global so that only one copy exists at a time
 NPObject *scriptableObj;
@@ -100,17 +99,6 @@ public:
     }
 };
 
-/* Timer func is called every interval. In each timer func a paint event is fired. */
-void refreshTimerFunc(NPP instance, uint32_t timerID)
-{
-    // invalidate rect sends a paint message
-    // Paint message should always be fired in main thread, trying to fire this event in browserRenderer's renderRGBFrame will cause crash.
-    
-    browser->invalidaterect(instance, &(((PluginInstance *)instance->pdata)->window.clipRect));
-    
-    return;
-}
-
 static void initializeIdentifiers()
 {
     //pluginMethods[0] = browser->getstringidentifier(pluginMethodNames[0]);
@@ -153,7 +141,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     
     // Though it's loading from an absolute path, still, for some reasons, the lib in /usr/lib with the same name gets loaded first.
     // Notice: it still is trying to load from /usr/lib, am I linking against the wrong stuff? No unlikely, build phase passed, but still, firefox does not know where the library is...
-    NdnRtcLibrary * libInstance = NdnRtcLibrary::instantiateLibraryObject("/Library/Internet Plug-Ins/BasicPlugin.bundle/Contents/Resources/libndnrtc-sa.dylib");
+    libInstance = NdnRtcLibrary::instantiateLibraryObject("/Library/Internet Plug-Ins/BasicPlugin.bundle/Contents/Resources/libndnrtc-sa.dylib");
     
     obDerived * debugOb = new obDerived();
     
@@ -175,20 +163,11 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     
     videoParams.ndnHub = "ndn/edu/ucla/remap";
     videoParams.loggingLevel = ndnlog::NdnLoggerDetailLevelNone;
+    videoParams.host = "aleph.ndn.ucla.edu";
     
     libInstance->configure(videoParams, audioParams);
     
-    BrowserRenderer *bRenderer = new BrowserRenderer(pluginInstance);
-    
-    //libInstance->startPublishing("zhehao", bRenderer);
-    libInstance->startFetching("remap-512", bRenderer);
-    
-    renderBuffer = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
-    bzero(renderBuffer, videoParams.renderHeight * videoParams.renderHeight * 3);
-    
-    // schedule timer fires timer event every interval, in which paint event is fired
-    browser->scheduletimer(pluginInstance->npp, 30, true, refreshTimerFunc);
-    
+    printf("lib instantiated.\n");
     // The lib's alloc'ed in heap and is not freed
     return NPERR_NO_ERROR;
 }
@@ -346,7 +325,7 @@ void drawDataInRect(CGContextRef context, CGRect frame, size_t width, size_t hei
     free(alphaBuffer);
 }
 
-/* drawPlugin is actually called every interval, and handles the repaint according to renderBuffer. */
+/* drawPlugin is called every time the drawing event is fired, which is called every interval. It handles the repaint according to renderBuffer. */
 void drawPlugin(NPP instance, NPCocoaEvent* event)
 {
     PluginInstance* currentInstance = (PluginInstance*)(instance->pdata);

@@ -28,12 +28,12 @@ void
 BrowserRenderer::renderRGBFrame(int64_t timestamp, int width, int height,
                              const uint8_t *buffer)
 {
-    // this function can either be a rendering callback, or a callback that updated the info to be rendered
-    // in the case of NPAPI browser integration, it's the latter.
+    // this function can either be a rendering callback, or a callback that updates the buffer to be rendered
+    // in the case of our NPAPI browser integration, it's the latter.
     
     // Interesting, it seems that the lock here does not really do much...
     
-    // The problem with this function here is not cross-thread reference, it's the wrong declaration of browser variable;
+    // The problem with this function here is not cross-thread reference. It's the wrong declaration of browser variable;
     // However, this method does seem to be outperformed by firing events periodically.
     //browser->invalidaterect(pInstance_->npp, &(pInstance_->window.clipRect));
     

@@ -9,10 +9,25 @@
 #include "ScriptableObject.h"
 #include "BasicPlugin.h"
 
+#include "BrowserRenderer.h"
+
+using namespace ndnrtc;
+
 NPIdentifier pluginMethods[PLUGIN_METHOD_NUM];
 NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
 
 char * versionStr = NULL;
+
+/* Timer func is called every interval. In each timer func a paint event is fired. */
+void refreshTimerFunc(NPP instance, uint32_t timerID)
+{
+    // invalidate rect sends a paint message
+    // Paint message should always be fired in main thread, trying to fire this event in browserRenderer's renderRGBFrame will cause crash: this statement is not true; earlier crashes were caused by wrong declarations of browser.
+    
+    browser->invalidaterect(instance, &(((PluginInstance *)instance->pdata)->window.clipRect));
+    
+    return;
+}
 
 MyScriptableNPObject::MyScriptableNPObject(NPP instance)
 {
@@ -56,10 +71,6 @@ bool MyScriptableNPObject::HasMethod(NPIdentifier name)
     
     printf("*** HasMethod function called. ***\n");
     
-    // browser->UTF8FromIdentifier and browser->GetStringIdentifier does not work for this thread?
-    // crashes at NPN_UTF8FromIdentifier, storing it at the initializatong phase also crashes...
-    
-    //printf("*** Name it's trying to lookup : %s. ***\n", NPN_UTF8FromIdentifier(name));
     int i = 0;
     for (i = 0; i < PLUGIN_METHOD_NUM; i++)
     {
@@ -81,23 +92,6 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
     bool rc = false;
     printf("*** Invoke function called. ***\n");
     
-    // Whenever browser does not try to get a scriptable object before invoking this method, the plugin crashes.
-    /*
-    if  (name == pluginMethods[ID_GET_VERSION])
-    {
-        printf("*** Tring to print version. ***\n");
-        
-        // versionStr is allocated in main thread, globally
-        if  (versionStr != NULL)
-        {
-            rc = true;
-            memset(versionStr, 0x00, strlen(PLUGIN_VERSION) + 1);
-            memcpy(versionStr, PLUGIN_VERSION, strlen(PLUGIN_VERSION));
-            STRINGZ_TO_NPVARIANT(versionStr, *result);
-        }
-    }
-    */
-    
     if  (name == pluginMethods[ID_GET_VERSION])
     {
         printf("*** Tring to print version. ***\n");
@@ -110,6 +104,35 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             memcpy(returnStr, PLUGIN_VERSION, strlen(PLUGIN_VERSION));
             STRINGZ_TO_NPVARIANT(returnStr, *result);
         }
+    }
+    if (name == pluginMethods[ID_START_FETCHING])
+    {
+        
+    }
+    if (name == pluginMethods[ID_START_PUBLISHING])
+    {
+        BrowserRenderer *bRenderer = new BrowserRenderer();
+        
+        libInstance->startPublishing("zhehao", bRenderer);
+        //libInstance->startFetching("remap-512", bRenderer);
+        
+        ParamsStruct videoParams, audioParams;
+        
+        libInstance->getDefaultParams(videoParams, audioParams);
+        
+        renderBuffer = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
+        bzero(renderBuffer, videoParams.renderHeight * videoParams.renderHeight * 3);
+        
+        // schedule timer fires timer event every interval, in which paint event is fired
+        browser->scheduletimer(instance_, 30, true, refreshTimerFunc);
+    }
+    if (name == pluginMethods[ID_STOP_FETCHING])
+    {
+        
+    }
+    if (name == pluginMethods[ID_STOP_PUBLISHING])
+    {
+        
     }
     
     return (rc);

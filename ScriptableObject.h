@@ -14,21 +14,29 @@
 
 #include "BasicPlugin.h"
 
-#define PLUGIN_METHOD_NUM 1
+#define PLUGIN_METHOD_NUM 5
 #define PLUGIN_PROPERTY_NUM 1
 
 extern NPIdentifier pluginMethods[PLUGIN_METHOD_NUM];
 static const NPUTF8 *pluginMethodNames[PLUGIN_METHOD_NUM] = {
-    "getVersion"
+    "getVersion", // getVersion is the debug call
+    "startPublishing",
+    "stopPublishing",
+    "startFetching",
+    "stopFetching"
 };
 
 enum {
-    ID_GET_VERSION = 0
+    ID_GET_VERSION = 0,
+    ID_START_PUBLISHING,
+    ID_STOP_PUBLISHING,
+    ID_START_FETCHING,
+    ID_STOP_FETCHING
 };
 
 extern NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
 static const NPUTF8 *pluginPropertyNames[PLUGIN_PROPERTY_NUM] = {
-    "version"
+    "version", // version is the debug property
 };
 
 extern char *versionStr;

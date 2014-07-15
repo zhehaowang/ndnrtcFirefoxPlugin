@@ -22,7 +22,7 @@ class BrowserRenderer : public ndnrtc::IExternalRenderer
 public:
     BrowserRenderer()
     {
-        pInstance_ = NULL;
+        //pInstance_ = NULL;
         bufferSize_ = 0;
         buffer_ = NULL;
         //printf("Debug: Browser renderer created.\n");
@@ -31,7 +31,7 @@ public:
     
     BrowserRenderer(PluginInstance *pInstance)
     {
-        pInstance_ = pInstance;
+        //pInstance_ = pInstance;
         bufferSize_ = 0;
         buffer_ = NULL;
         //printf("Debug: Browser renderer created witbh parameter.\n");
@@ -50,7 +50,7 @@ private:
     int bufferSize_;
     uint8_t *buffer_;
     
-    PluginInstance *pInstance_;
+    //PluginInstance *pInstance_;
 };
 
 #endif /* defined(__ndnrtc__renderer_stub__) */

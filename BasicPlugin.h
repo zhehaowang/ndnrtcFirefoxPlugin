@@ -23,6 +23,7 @@
 #include "npapiHeaders/npapi.h"
 #include "npapiHeaders/npfunctions.h"
 #include "ScriptableObject.h"
+#include "ndnrtc-library.h"
 
 #include <mutex>
 
@@ -48,6 +49,7 @@ extern NPNetscapeFuncs* browser;
 // interesting that without static it does not work; with static it's semantically incorrect; the semantically correct way is below.
 extern uint8_t *renderBuffer;
 extern std::mutex renderBufferLock;
+extern ndnrtc::NdnRtcLibrary * libInstance;
 
 #pragma GCC visibility push(default)
 extern "C" {
