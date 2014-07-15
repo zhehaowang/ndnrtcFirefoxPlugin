@@ -27,7 +27,11 @@
 
 #include <mutex>
 
+#define STRINGS_PRODUCTNAME "ndnrtc-plugin"
+#define STRINGS_FILEDESCRIPTION "Test description"
+
 #define PLUGIN_VERSION "v0.1"
+#define MAX_CLIENTS 10
 
 /* According to MDN's reference https://developer.mozilla.org/en-US/Add-ons/Plugins/Writing_a_plugin_for_Mac_OS_X
  * these 3 functions should be made visible to the caller in a C style, as signified by the extern statement below */
@@ -47,9 +51,14 @@ typedef struct PluginInstance {
 extern NPNetscapeFuncs* browser;
 
 // interesting that without static it does not work; with static it's semantically incorrect; the semantically correct way is below.
-extern uint8_t *renderBuffer;
+extern uint8_t *renderBuffers[MAX_CLIENTS];
+extern int renderBufferCount;
+
 extern std::mutex renderBufferLock;
 extern ndnrtc::NdnRtcLibrary * libInstance;
+
+extern bool isPublishing;
+extern int fetchingNum;
 
 #pragma GCC visibility push(default)
 extern "C" {
@@ -75,7 +84,7 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value);
 NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value);
 
 void drawPlugin(NPP instance, NPCocoaEvent* event);
-void drawDataInRect(CGContextRef context, CGRect frame, size_t width, size_t height);
+void renderInRect(CGContextRef context, CGRect frame, size_t width, size_t height);
 
 #endif
 

@@ -107,24 +107,82 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
     }
     if (name == pluginMethods[ID_START_FETCHING])
     {
-        
+        if (argCount == 2)
+        {
+            NPString fetcherName = NPVARIANT_TO_STRING(args[0]);
+            NPString fetcherPrefix = NPVARIANT_TO_STRING(args[1]);
+            
+            printf("startFetch: Trying to start fetching from name '%s', prefix '%s'.\n", fetcherName.UTF8Characters, fetcherName.UTF8Characters);
+            
+            BrowserRenderer *bRenderer = new BrowserRenderer();
+            
+            ParamsStruct videoParams, audioParams;
+            
+            libInstance->currentParams(videoParams, audioParams);
+            //videoParams.producerId = publisherName.UTF8Characters;
+            
+            // Here renderBuffer is used instead, should do the same for drawingEvent handling.
+            
+            bRenderer->renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
+            bzero(bRenderer->renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
+            renderBuffers[renderBufferCount] = bRenderer->renderBuffer_;
+            bRenderer->bufferIndex_ = renderBufferCount;
+            
+            renderBufferCount++;
+            
+            libInstance->startFetching(fetcherName.UTF8Characters, bRenderer);
+            
+            // schedule timer fires timer event every interval, in which paint event is fired
+            if (isPublishing == false && fetchingNum == 0)
+            {
+                browser->scheduletimer(instance_, 30, true, refreshTimerFunc);
+            }
+            
+            fetchingNum ++;
+        }
+        else
+        {
+            printf("startFetch: Wrong number of arguments.\n");
+        }
     }
     if (name == pluginMethods[ID_START_PUBLISHING])
     {
-        BrowserRenderer *bRenderer = new BrowserRenderer();
-        
-        libInstance->startPublishing("zhehao", bRenderer);
-        //libInstance->startFetching("remap-512", bRenderer);
-        
-        ParamsStruct videoParams, audioParams;
-        
-        libInstance->getDefaultParams(videoParams, audioParams);
-        
-        renderBuffer = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
-        bzero(renderBuffer, videoParams.renderHeight * videoParams.renderHeight * 3);
-        
-        // schedule timer fires timer event every interval, in which paint event is fired
-        browser->scheduletimer(instance_, 30, true, refreshTimerFunc);
+        if (argCount == 2)
+        {
+            NPString publisherName = NPVARIANT_TO_STRING(args[0]);
+            NPString publisherPrefix = NPVARIANT_TO_STRING(args[1]);
+            
+            printf("startPublish: Trying to start publishing with name '%s', prefix '%s'.\n", publisherName.UTF8Characters, publisherPrefix.UTF8Characters);
+            
+            BrowserRenderer *bRenderer = new BrowserRenderer();
+            
+            ParamsStruct videoParams, audioParams;
+            
+            libInstance->currentParams(videoParams, audioParams);
+            //videoParams.producerId = publisherName.UTF8Characters;
+            
+            bRenderer->renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
+            bzero(bRenderer->renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
+            renderBuffers[renderBufferCount] = bRenderer->renderBuffer_;
+            bRenderer->bufferIndex_ = renderBufferCount;
+            
+            renderBufferCount++;
+            
+            libInstance->startPublishing(publisherName.UTF8Characters, bRenderer);
+            //libInstance->startFetching("remap-512", bRenderer);
+            // schedule timer fires timer event every interval, in which paint event is fired
+            
+            if (isPublishing == false && fetchingNum == 0)
+            {
+                browser->scheduletimer(instance_, 30, true, refreshTimerFunc);
+            }
+            
+            isPublishing = true;
+        }
+        else
+        {
+            printf("startPublish: Wrong number of arguments.\n");
+        }
     }
     if (name == pluginMethods[ID_STOP_FETCHING])
     {
@@ -158,7 +216,17 @@ bool MyScriptableNPObject::_HasProperty(NPObject *npobj, NPIdentifier name)
 }
 bool MyScriptableNPObject::HasProperty(NPIdentifier name)
 {
-    return true;
+    printf("*** HasProperty function called. ***\n");
+    
+    int i = 0;
+    for (i = 0; i < PLUGIN_PROPERTY_NUM; i++)
+    {
+        if (name == pluginProperties[i])
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 // static
@@ -169,7 +237,35 @@ bool MyScriptableNPObject::_GetProperty(NPObject *npobj, NPIdentifier name, NPVa
 }
 bool MyScriptableNPObject::GetProperty(NPIdentifier name, NPVariant *result)
 {
-    return true;
+    bool rc = false;
+    printf("*** GetProperty called. ***\n");
+    
+    // Not tested for now.
+    if  (name == pluginProperties[ID_VERSION])
+    {
+        char * returnStr = (NPUTF8*)(browser->memalloc(strlen(PLUGIN_VERSION) + 1));
+        // versionStr is allocated in main thread, globally
+        if  (returnStr != NULL)
+        {
+            rc = true;
+            memset(returnStr, 0x00, strlen(PLUGIN_VERSION) + 1);
+            memcpy(returnStr, PLUGIN_VERSION, strlen(PLUGIN_VERSION));
+            STRINGZ_TO_NPVARIANT(returnStr, *result);
+        }
+    }
+    if (name == pluginProperties[ID_IS_PUBLISHING])
+    {
+        //printf("Property isPublishing exists");
+        BOOLEAN_TO_NPVARIANT(isPublishing, *result);
+        rc = true;
+    }
+    if (name == pluginProperties[ID_FETCHING_NUM])
+    {
+        INT32_TO_NPVARIANT(fetchingNum, *result);
+        rc = true;
+    }
+    
+    return rc;
 }
 
 // static

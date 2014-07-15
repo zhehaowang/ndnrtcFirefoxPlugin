@@ -29,11 +29,8 @@
 
 #include "BrowserRenderer.h"
 
-#define STRINGS_PRODUCTNAME "ndnrtc-plugin"
-#define STRINGS_FILEDESCRIPTION "Test description"
-
-//distinguish between extern declarations in headers, and static (only) declaration in headers
-uint8_t *renderBuffer;
+uint8_t *renderBuffers[MAX_CLIENTS];
+int renderBufferCount = 0;
 
 std::mutex renderBufferLock;
 
@@ -43,6 +40,9 @@ NdnRtcLibrary * libInstance;
 
 // The npobject to pass into the browser. Made global so that only one copy exists at a time
 NPObject *scriptableObj;
+
+bool isPublishing = false;
+int fetchingNum = 0;
 
 /* Symbol called once by the browser to initialize the plugin. */
 NPError NP_Initialize(NPNetscapeFuncs* browserFuncs)
@@ -85,7 +85,7 @@ NPError NP_GetEntryPoints(NPPluginFuncs* pluginFuncs)
 /* Function called once by the browser to shut down the plugin. */
 void NP_Shutdown(void)
 {
-    free(renderBuffer);
+    free(renderBuffers);
 }
 
 /* Class inherited from libndnrtc's observer interface, can be used to track the state of the app */
@@ -288,8 +288,44 @@ NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
     return NPERR_GENERIC_ERROR;
 }
 
+// this is sample function which takes different parameters from the following one
+/*
+void renderWindowInRect(CGContextRef context, CGRect frame)
+{
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+    
+    int pixelNum = rw.getWidth() * rw.getHeight();
+    
+    uint8_t * alphaBuffer = (uint8_t *)malloc(pixelNum * 4);
+    
+    // According to Quartz/AppleDevelopment documentation, the only byte format for rendering RGB bytes seems to take only 32bpp, so here Peter's 24bpp input is copied, and an empty alpha byte is added after each RGB byte.
+    int i = 0, j = 0;
+    while (i < pixelNum * 4)
+    {
+        alphaBuffer[i++] = rw.buffer_[j++];
+        alphaBuffer[i++] = rw.buffer_[j++];
+        alphaBuffer[i++] = rw.buffer_[j++];
+        
+        alphaBuffer[i++] = 0;
+    }
+    
+    CGContextRef bitMapContext = CGBitmapContextCreate(alphaBuffer, rw.getWidth(), rw.getHeight(), 8, 4*rw.getWidth(), colorSpace, kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little);
+    
+    CGColorSpaceRelease(colorSpace);
+    CGImageRef bitMapImage = CGBitmapContextCreateImage(bitMapContext);
+    
+    CGContextDrawImage(context, frame, bitMapImage);
+    CGImageRelease(bitMapImage);
+    
+    CGContextRelease(bitMapContext);
+    
+    free(alphaBuffer);
+    
+}
+*/
+
 // this is a sample function that draws a frame with RGB array as input, using CoreGraphics
-void drawDataInRect(CGContextRef context, CGRect frame, size_t width, size_t height)
+void renderInRect(uint8_t *buffer, CGContextRef context, CGRect frame, size_t width, size_t height)
 {
     CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
     
@@ -299,13 +335,13 @@ void drawDataInRect(CGContextRef context, CGRect frame, size_t width, size_t hei
     int i = 0, j = 0;
     while (i < width * height * 4)
     {
-        alphaBuffer[i++] = renderBuffer[j++];
-        alphaBuffer[i++] = renderBuffer[j++];
-        alphaBuffer[i++] = renderBuffer[j++];
+        alphaBuffer[i++] = buffer[j++];
+        alphaBuffer[i++] = buffer[j++];
+        alphaBuffer[i++] = buffer[j++];
         
         // wonder why this gives a different result:
         
-        //memcpy(alphaBuffer+i, renderBuffer+j, 3);
+        //memcpy(alphaBuffer+i, buffer+j, 3);
         //i+=3;
         //j+=3;
         // a random alpha
@@ -325,7 +361,8 @@ void drawDataInRect(CGContextRef context, CGRect frame, size_t width, size_t hei
     free(alphaBuffer);
 }
 
-/* drawPlugin is called every time the drawing event is fired, which is called every interval. It handles the repaint according to renderBuffer. */
+/* drawPlugin is called every time the drawing event is fired, which is called every interval. 
+   It handles the repaint of the whole plugin. */
 void drawPlugin(NPP instance, NPCocoaEvent* event)
 {
     PluginInstance* currentInstance = (PluginInstance*)(instance->pdata);
@@ -349,9 +386,20 @@ void drawPlugin(NPP instance, NPCocoaEvent* event)
     CGContextTranslateCTM(cgContext, 0.0, windowHeight);
     CGContextScaleCTM(cgContext, 1.0, -1.0);
     
-    renderBufferLock.lock();
-    drawDataInRect(cgContext, CGRectMake(0, 0, windowWidth, windowHeight), windowWidth, windowHeight);
-    renderBufferLock.unlock();
+    //renderBufferLock.lock();
+    if (isPublishing)
+    {
+        // A renderBuffer should be an array of buffers associated with renderBuffer in browserRenderer class, or with browserRenderer itself;
+        
+        for (int i = 0; i < renderBufferCount; i++)
+        {
+            // the rect setting is not correct yet
+            renderInRect(renderBuffers[i], cgContext, CGRectMake(0, 0, windowWidth, windowHeight), windowWidth, windowHeight);
+        }
+    }
+    //renderBufferLock.unlock();
+    
+    //for (int i = 0; i < )
     
     // Restore the cgcontext gstate.
     CGContextRestoreGState(cgContext);
