@@ -37,18 +37,13 @@ BrowserRenderer::renderRGBFrame(int64_t timestamp, int width, int height,
     // However, this method does seem to be outperformed by firing events periodically.
     //browser->invalidaterect(pInstance_->npp, &(pInstance_->window.clipRect));
     
-    //renderBufferLock.lock();
+    renderWindows[bufferIndex_].renderBufferLock_.lock();
     
-    //uint8_t *temp = renderBuffer;
-    //memcpy(renderBuffer, buffer_, 921600);
-    
-    //renderBuffer_ = buffer_;
+    //uint8_t *temp = renderWindows[bufferIndex_].renderBuffer_;
     renderWindows[bufferIndex_].renderBuffer_ = buffer_;
-    
     //buffer_ = temp;
-    //printf("Render buffer ready, buffer size: %d\n", bufferSize_);
     
-    //renderBufferLock.unlock();
+    renderWindows[bufferIndex_].renderBufferLock_.unlock();
     
     return;
 }

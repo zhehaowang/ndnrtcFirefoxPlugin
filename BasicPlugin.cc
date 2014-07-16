@@ -164,7 +164,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     
     videoParams.ndnHub = "ndn/edu/ucla/remap";
     videoParams.loggingLevel = ndnlog::NdnLoggerDetailLevelNone;
-    videoParams.host = "aleph.ndn.ucla.edu";
+    videoParams.host = "localhost";
     
     libInstance->configure(videoParams, audioParams);
     
@@ -289,42 +289,6 @@ NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
     return NPERR_GENERIC_ERROR;
 }
 
-// this is sample function which takes different parameters from the following one
-/*
-void renderWindowInRect(CGContextRef context, CGRect frame)
-{
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-    
-    int pixelNum = rw.getWidth() * rw.getHeight();
-    
-    uint8_t * alphaBuffer = (uint8_t *)malloc(pixelNum * 4);
-    
-    // According to Quartz/AppleDevelopment documentation, the only byte format for rendering RGB bytes seems to take only 32bpp, so here Peter's 24bpp input is copied, and an empty alpha byte is added after each RGB byte.
-    int i = 0, j = 0;
-    while (i < pixelNum * 4)
-    {
-        alphaBuffer[i++] = rw.buffer_[j++];
-        alphaBuffer[i++] = rw.buffer_[j++];
-        alphaBuffer[i++] = rw.buffer_[j++];
-        
-        alphaBuffer[i++] = 0;
-    }
-    
-    CGContextRef bitMapContext = CGBitmapContextCreate(alphaBuffer, rw.getWidth(), rw.getHeight(), 8, 4*rw.getWidth(), colorSpace, kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little);
-    
-    CGColorSpaceRelease(colorSpace);
-    CGImageRef bitMapImage = CGBitmapContextCreateImage(bitMapContext);
-    
-    CGContextDrawImage(context, frame, bitMapImage);
-    CGImageRelease(bitMapImage);
-    
-    CGContextRelease(bitMapContext);
-    
-    free(alphaBuffer);
-    
-}
-*/
-
 // this is a sample function that draws a frame with RGB array as input, using CoreGraphics
 void renderInRect(uint8_t *buffer, CGContextRef context, CGRect frame, size_t width, size_t height)
 {
@@ -346,6 +310,7 @@ void renderInRect(uint8_t *buffer, CGContextRef context, CGRect frame, size_t wi
         //i+=3;
         //j+=3;
         // a random alpha
+        
         alphaBuffer[i++] = 0;
     }
     
@@ -385,19 +350,21 @@ void drawPlugin(NPP instance, NPCocoaEvent* event)
     CGContextScaleCTM(cgContext, 1.0, -1.0);
     
     //renderBufferLock.lock();
-    if (isPublishing)
-    {
-        // A renderBuffer should be an array of buffers associated with renderBuffer in browserRenderer class, or with browserRenderer itself;
+    
+    // A renderBuffer should be an array of buffers associated with renderBuffer in browserRenderer class, or with browserRenderer itself;
         
-        for (int i = 0; i < renderBufferCount; i++)
-        {
-            // rect setting does not work as expected yet.
-            renderInRect(renderWindows[i].renderBuffer_, cgContext, CGRectMake(renderWindows[i].getTop(), renderWindows[i].getLeft(), defaultWindowWidth, defaultWindowHeight), defaultWindowWidth, defaultWindowHeight);
-        }
+    for (int i = 0; i < renderBufferCount; i++)
+    {
+        // the lock could be 
+        renderWindows[i].renderBufferLock_.lock();
+        
+        // cgRectMake starts with the bottom left point. the sequence of parameters are left, bottom, width and height.
+        renderInRect(renderWindows[i].renderBuffer_, cgContext, renderWindows[i].getRect(), defaultWindowWidth, defaultWindowHeight);
+        
+        renderWindows[i].renderBufferLock_.unlock();
+        
     }
     //renderBufferLock.unlock();
-    
-    //for (int i = 0; i < )
     
     // Restore the cgcontext gstate.
     CGContextRestoreGState(cgContext);

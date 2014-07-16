@@ -126,8 +126,9 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             renderWindows[renderBufferCount].renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
             bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
             
-            renderWindows[renderBufferCount].setTop(0);
+            renderWindows[renderBufferCount].setBottom(0);
             renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
+            renderWindows[renderBufferCount].generateRect();
             
             renderBufferCount++;
             
@@ -140,6 +141,7 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             }
             
             fetchingNum ++;
+            rc = true;
         }
         else
         {
@@ -167,13 +169,14 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             renderWindows[renderBufferCount].renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
             bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
             
-            renderWindows[renderBufferCount].setTop(0);
+            renderWindows[renderBufferCount].setBottom(0);
             renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
+            renderWindows[renderBufferCount].generateRect();
             
             renderBufferCount++;
             
             libInstance->startPublishing(publisherName.UTF8Characters, bRenderer);
-            //libInstance->startFetching("remap-512", bRenderer);
+            
             // schedule timer fires timer event every interval, in which paint event is fired
             
             if (isPublishing == false && fetchingNum == 0)
@@ -182,6 +185,7 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             }
             
             isPublishing = true;
+            rc = true;
         }
         else
         {
@@ -192,7 +196,7 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
     {
         if (argCount == 2)
         {
-        
+            rc = true;
         }
         else
         {
@@ -207,7 +211,9 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             // Free the 'corresponding' renderWindow as well? Decrement renderWindowNum. And if there are no more renderWindows,
             // Stop sending paint msgs; Something could go wrong with decrement process?
             
-            // May need a linked-list and index for renderWindow, since it could be dynamically allocated and de-allocated
+            // May need a linked-list and index for renderWindow, since it could be randomly referenced, dynamically allocated and de-allocated
+            // stop-publishing does not reset the drawing window/rect for now.
+            rc = true;
         }
         else
         {

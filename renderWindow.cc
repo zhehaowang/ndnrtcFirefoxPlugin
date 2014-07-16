@@ -11,7 +11,7 @@
 
 renderWindow::renderWindow()
 {
-    top_ = 0;
+    bottom_ = 0;
     left_ = 0;
     width_ = defaultWindowWidth;
     height_ = defaultWindowHeight;
@@ -49,9 +49,9 @@ int renderWindow::getLeft()
     return left_;
 }
 
-int renderWindow::getTop()
+int renderWindow::getBottom()
 {
-    return top_;
+    return bottom_;
 }
 
 bool renderWindow::setLeft(int left)
@@ -60,8 +60,19 @@ bool renderWindow::setLeft(int left)
     return true;
 }
 
-bool renderWindow::setTop(int top)
+bool renderWindow::setBottom(int bottom)
 {
-    top_ = top;
+    bottom_ = bottom;
     return true;
+}
+
+bool renderWindow::generateRect()
+{
+    rect_ = CGRectMake(left_, bottom_, width_, height_);
+    return true;
+}
+
+CGRect renderWindow::getRect()
+{
+    return rect_;
 }
