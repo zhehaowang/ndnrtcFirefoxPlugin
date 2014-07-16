@@ -22,8 +22,10 @@
 // headers know we're compiling for Mac OS X.
 #include "npapiHeaders/npapi.h"
 #include "npapiHeaders/npfunctions.h"
+
 #include "ScriptableObject.h"
 #include "ndnrtc-library.h"
+#include "renderWindow.h"
 
 #include <mutex>
 
@@ -51,7 +53,7 @@ typedef struct PluginInstance {
 extern NPNetscapeFuncs* browser;
 
 // interesting that without static it does not work; with static it's semantically incorrect; the semantically correct way is below.
-extern uint8_t *renderBuffers[MAX_CLIENTS];
+extern renderWindow renderWindows[MAX_CLIENTS];
 extern int renderBufferCount;
 
 extern std::mutex renderBufferLock;

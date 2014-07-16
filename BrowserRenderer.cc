@@ -42,8 +42,8 @@ BrowserRenderer::renderRGBFrame(int64_t timestamp, int width, int height,
     //uint8_t *temp = renderBuffer;
     //memcpy(renderBuffer, buffer_, 921600);
     
-    renderBuffer_ = buffer_;
-    renderBuffers[bufferIndex_] = buffer_;
+    //renderBuffer_ = buffer_;
+    renderWindows[bufferIndex_].renderBuffer_ = buffer_;
     
     //buffer_ = temp;
     //printf("Render buffer ready, buffer size: %d\n", bufferSize_);
@@ -51,49 +51,4 @@ BrowserRenderer::renderRGBFrame(int64_t timestamp, int width, int height,
     //renderBufferLock.unlock();
     
     return;
-}
-
-
-size_t BrowserRenderer::getHeight()
-{
-    return height_;
-}
-
-size_t BrowserRenderer::getWidth()
-{
-    return width_;
-}
-
-bool BrowserRenderer::setWidth(size_t width)
-{
-    width_ = width;
-    return true;
-}
-
-bool BrowserRenderer::setHeight(size_t height)
-{
-    height_ = height;
-    return true;
-}
-
-int BrowserRenderer::getLeft()
-{
-    return left_;
-}
-
-int BrowserRenderer::getTop()
-{
-    return top_;
-}
-
-bool BrowserRenderer::setLeft(int left)
-{
-    left_ = left;
-    return true;
-}
-
-bool BrowserRenderer::setTop(int top)
-{
-    top_ = top;
-    return true;
 }
