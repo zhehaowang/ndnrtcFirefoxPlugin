@@ -15,7 +15,7 @@
 #include "BasicPlugin.h"
 
 #define PLUGIN_METHOD_NUM 5
-#define PLUGIN_PROPERTY_NUM 4
+#define PLUGIN_PROPERTY_NUM 6
 
 #define MAX_STRING_LENGTH 100
 
@@ -41,14 +41,18 @@ static const NPUTF8 *pluginPropertyNames[PLUGIN_PROPERTY_NUM] = {
     "version", // version is the debug property
     "isPublishing", // isPublishing returns if the plugin's publishing
     "fetchingNum",
-    "renderWindowNum"
+    "renderWindowNum",
+    "defaultWindowWidth",
+    "defaultWindowHeight"
 };
 
 enum {
     ID_VERSION = 0,
     ID_IS_PUBLISHING,
     ID_FETCHING_NUM,
-    ID_RENDER_WINDOW_NUM
+    ID_RENDER_WINDOW_NUM,
+    ID_DEFAULT_WINDOW_WIDTH,
+    ID_DEFAULT_WINDOW_HEIGHT
 };
 
 extern char *versionStr;

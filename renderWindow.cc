@@ -7,17 +7,19 @@
 //
 
 #include "renderWindow.h"
+#include "BasicPlugin.h"
 
 renderWindow::renderWindow()
 {
     top_ = 0;
     left_ = 0;
+    width_ = defaultWindowWidth;
+    height_ = defaultWindowHeight;
 }
 
 renderWindow::~renderWindow()
 {
-    top_ = 0;
-    left_  = 0;
+    free (renderBuffer_);
 }
 
 size_t renderWindow::getHeight()

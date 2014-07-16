@@ -62,6 +62,9 @@ extern ndnrtc::NdnRtcLibrary * libInstance;
 extern bool isPublishing;
 extern int fetchingNum;
 
+const size_t defaultWindowWidth = 640;
+const size_t defaultWindowHeight = 480;
+
 #pragma GCC visibility push(default)
 extern "C" {
     NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);

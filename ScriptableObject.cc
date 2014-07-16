@@ -126,7 +126,8 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             renderWindows[renderBufferCount].renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
             bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
             
-            //renderWindows[renderBufferCount] = bRenderer->renderBuffer_;
+            renderWindows[renderBufferCount].setTop(0);
+            renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
             
             renderBufferCount++;
             
@@ -166,7 +167,8 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             renderWindows[renderBufferCount].renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
             bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
             
-            //renderWindows[renderBufferCount] = bRenderer->renderBuffer_;
+            renderWindows[renderBufferCount].setTop(0);
+            renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
             
             renderBufferCount++;
             
@@ -188,11 +190,29 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
     }
     if (name == pluginMethods[ID_STOP_FETCHING])
     {
+        if (argCount == 2)
+        {
         
+        }
+        else
+        {
+            printf("stopFetch: Wrong number of arguments.\n");
+        }
     }
     if (name == pluginMethods[ID_STOP_PUBLISHING])
     {
-        
+        if (argCount == 0)
+        {
+            libInstance->stopPublishing();
+            // Free the 'corresponding' renderWindow as well? Decrement renderWindowNum. And if there are no more renderWindows,
+            // Stop sending paint msgs; Something could go wrong with decrement process?
+            
+            // May need a linked-list and index for renderWindow, since it could be dynamically allocated and de-allocated
+        }
+        else
+        {
+            printf("stopPublish: Wrong number of arguments");
+        }
     }
     
     return (rc);
@@ -272,6 +292,18 @@ bool MyScriptableNPObject::GetProperty(NPIdentifier name, NPVariant *result)
         INT32_TO_NPVARIANT(renderBufferCount, *result);
         rc = true;
     }
+    // Here it is assumed that type size_t can be casted to NP_Variant as an INT32 input
+    if (name == pluginProperties[ID_DEFAULT_WINDOW_WIDTH])
+    {
+        INT32_TO_NPVARIANT(defaultWindowWidth, *result);
+        rc = true;
+    }
+    if (name == pluginProperties[ID_DEFAULT_WINDOW_HEIGHT])
+    {
+        INT32_TO_NPVARIANT(defaultWindowHeight, *result);
+        rc = true;
+    }
+    
     return rc;
 }
 

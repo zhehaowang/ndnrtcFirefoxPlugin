@@ -377,14 +377,11 @@ void drawPlugin(NPP instance, NPCocoaEvent* event)
         return;
     }
     
-    float windowWidth = currentInstance->window.width;
-    float windowHeight = currentInstance->window.height;
-    
     // Save the cgcontext gstate.
     CGContextSaveGState(cgContext);
     
     // before passing into bitmapContext, flip cgContext
-    CGContextTranslateCTM(cgContext, 0.0, windowHeight);
+    CGContextTranslateCTM(cgContext, 0.0, defaultWindowHeight);
     CGContextScaleCTM(cgContext, 1.0, -1.0);
     
     //renderBufferLock.lock();
@@ -394,8 +391,8 @@ void drawPlugin(NPP instance, NPCocoaEvent* event)
         
         for (int i = 0; i < renderBufferCount; i++)
         {
-            // the rect setting is not correct yet
-            renderInRect(renderWindows[i].renderBuffer_, cgContext, CGRectMake(0, 0, windowWidth, windowHeight), windowWidth, windowHeight);
+            // rect setting does not work as expected yet.
+            renderInRect(renderWindows[i].renderBuffer_, cgContext, CGRectMake(renderWindows[i].getTop(), renderWindows[i].getLeft(), defaultWindowWidth, defaultWindowHeight), defaultWindowWidth, defaultWindowHeight);
         }
     }
     //renderBufferLock.unlock();
