@@ -25,9 +25,13 @@
 // InfoPList.string is considered as irrelevant and deleted.
 // Error messages telling the key used being wrong start to arise
 
+
+// Issue: refresh page crashes the plugin, has to refresh again.
+
 #include "BasicPlugin.h"
 
 // renderBuffer and window area should belong to each render window, which can be represented by a renderWindow class.
+// renderWindows are allocated in an array, deletion of a certain window will cause all windows after it to move forward
 renderWindow renderWindows[MAX_CLIENTS];
 int renderWindowNum = 0;
 
@@ -37,10 +41,13 @@ NPNetscapeFuncs* browser;
 
 NdnRtcLibrary * libInstance;
 
-// The npobject to pass into the browser. Made global so that only one copy exists at a time
+// The npobject to pass into the browser. Made global so that only one copy exists at a time.
 NPObject *scriptableObj;
 
+// publishingNum is the window number of the publisher; -1 signifies not publishing.
 int publishingNum = -1;
+
+// fetchNum is the total number of running consumers.
 int fetchingNum = 0;
 
 /* Symbol called once by the browser to initialize the plugin. */
