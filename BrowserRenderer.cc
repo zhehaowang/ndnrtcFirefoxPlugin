@@ -43,7 +43,7 @@ BrowserRenderer::renderRGBFrame(int64_t timestamp, int width, int height,
     
     // Still the problem of having lock versus not, the lock does not seem to have any impacts at all?
     
-    renderWindows[bufferIndex_].renderBufferLock_.lock();
+    //renderWindows[bufferIndex_].renderBufferLock_.lock();
     
     //uint8_t *temp = renderWindows[bufferIndex_].renderBuffer_;
     
@@ -58,7 +58,7 @@ BrowserRenderer::renderRGBFrame(int64_t timestamp, int width, int height,
     
     //buffer_ = temp;
     
-    renderWindows[bufferIndex_].renderBufferLock_.unlock();
+    //renderWindows[bufferIndex_].renderBufferLock_.unlock();
     
     return;
 }

@@ -374,8 +374,10 @@ void drawPlugin(NPP instance, NPCocoaEvent* event)
         */
         
         // cgRectMake starts with the bottom left point. the sequence of parameters are left, bottom, width and height.
-        renderInRect(renderWindows[i].renderBuffer_, cgContext, renderWindows[i].getRect(), defaultWindowWidth, defaultWindowHeight);
-        
+        if (renderWindows[i].bufferFilled_)
+        {
+            renderInRect(renderWindows[i].renderBuffer_, cgContext, renderWindows[i].getRect(), defaultWindowWidth, defaultWindowHeight);
+        }
     }
     
     // Restore the cgcontext gstate.

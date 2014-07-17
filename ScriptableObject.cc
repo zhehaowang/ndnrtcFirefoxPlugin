@@ -119,12 +119,18 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             ParamsStruct videoParams, audioParams;
             
             libInstance->currentParams(videoParams, audioParams);
-            //videoParams.producerId = publisherName.UTF8Characters;
+            videoParams.producerId = fetcherName.UTF8Characters;
+            videoParams.ndnHub = fetcherPrefix.UTF8Characters;
             
+            libInstance->configure(videoParams, audioParams);
+             
             bRenderer->bufferIndex_ = renderBufferCount;
             
-            renderWindows[renderBufferCount].renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
-            bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
+            // Still need to walk through the differences here; renderBuffer_ is only a pointer, supposedly
+            //renderWindows[renderBufferCount].renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
+            
+            renderWindows[renderBufferCount].renderBuffer_ = NULL;
+            //bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
             
             renderWindows[renderBufferCount].setBottom(0);
             renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
@@ -168,8 +174,9 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             
             bRenderer->bufferIndex_ = renderBufferCount;
             
-            renderWindows[renderBufferCount].renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
-            bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
+            renderWindows[renderBufferCount].renderBuffer_ = NULL;
+            //(uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
+            //bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
             
             renderWindows[renderBufferCount].setBottom(0);
             renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
