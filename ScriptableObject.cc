@@ -107,6 +107,14 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
     }
     if (name == pluginMethods[ID_START_FETCHING])
     {
+        // Issue: startFetch takes too long (usually it is still working), if publisher is started before consumer.
+        // Reason: For some reasons, 'catching up' process took far too long; I can see a lot of ints and data exchange in local status.
+        // Comparisons: Tested with external renderer and default renderer, both yields the same result. The test-app, however, takes a much shorter 'delay' time; I didn't remember encountering such problems before, with scriptableObject not yet implemented and fetching from remap-512 (which seems to be off?)
+        // Solving: No idea yet; need to trace the problem further
+        
+        // Issue: startFetch does not work for more than one windows;
+        // Reason: Still investigating.
+        
         if (argCount == 2)
         {
             NPString fetcherName = NPVARIANT_TO_STRING(args[0]);
@@ -123,7 +131,7 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             videoParams.ndnHub = fetcherPrefix.UTF8Characters;
             
             libInstance->configure(videoParams, audioParams);
-             
+            
             bRenderer->bufferIndex_ = renderBufferCount;
             
             // Still need to walk through the differences here; renderBuffer_ is only a pointer, supposedly
@@ -138,8 +146,6 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             
             renderWindows[renderBufferCount].bRenderer_ = bRenderer;
             
-            renderBufferCount++;
-            
             libInstance->startFetching(fetcherName.UTF8Characters, bRenderer);
             
             // schedule timer fires timer event every interval, in which paint event is fired
@@ -148,7 +154,9 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
                 browser->scheduletimer(instance_, 30, true, refreshTimerFunc);
             }
             
+            renderBufferCount++;
             fetchingNum ++;
+            
             rc = true;
         }
         else
@@ -184,8 +192,6 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             
             renderWindows[renderBufferCount].bRenderer_ = bRenderer;
             
-            renderBufferCount++;
-            
             libInstance->startPublishing(publisherName.UTF8Characters, bRenderer);
             
             // schedule timer fires timer event every interval, in which paint event is fired
@@ -194,6 +200,8 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             {
                 browser->scheduletimer(instance_, 30, true, refreshTimerFunc);
             }
+            
+            renderBufferCount++;
             
             isPublishing = true;
             rc = true;
@@ -287,7 +295,6 @@ bool MyScriptableNPObject::GetProperty(NPIdentifier name, NPVariant *result)
     bool rc = false;
     printf("*** GetProperty called. ***\n");
     
-    // Not tested for now.
     if  (name == pluginProperties[ID_VERSION])
     {
         char * returnStr = (NPUTF8*)(browser->memalloc(strlen(PLUGIN_VERSION) + 1));

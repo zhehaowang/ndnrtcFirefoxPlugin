@@ -166,7 +166,6 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     
     libInstance->configure(videoParams, audioParams);
     
-    printf("lib instantiated.\n");
     // The lib's alloc'ed in heap and is not freed
     return NPERR_NO_ERROR;
 }
