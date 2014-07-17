@@ -26,6 +26,7 @@
 #include "ScriptableObject.h"
 #include "ndnrtc-library.h"
 #include "renderWindow.h"
+#include "BrowserRenderer.h"
 
 #include <mutex>
 

@@ -15,6 +15,9 @@ renderWindow::renderWindow()
     left_ = 0;
     width_ = defaultWindowWidth;
     height_ = defaultWindowHeight;
+    
+    bRenderer_ = NULL;
+    bufferFilled_ = false;
 }
 
 renderWindow::~renderWindow()

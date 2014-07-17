@@ -39,6 +39,9 @@ public:
                         const uint8_t* buffer);
     
     int bufferIndex_;
+    
+    uint8_t *getBuffer();
+    bool setBuffer(uint8_t * buffer);
 private:
     int bufferSize_;
     

@@ -130,6 +130,8 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
             renderWindows[renderBufferCount].generateRect();
             
+            renderWindows[renderBufferCount].bRenderer_ = bRenderer;
+            
             renderBufferCount++;
             
             libInstance->startFetching(fetcherName.UTF8Characters, bRenderer);
@@ -173,6 +175,8 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
             renderWindows[renderBufferCount].generateRect();
             
+            renderWindows[renderBufferCount].bRenderer_ = bRenderer;
+            
             renderBufferCount++;
             
             libInstance->startPublishing(publisherName.UTF8Characters, bRenderer);
@@ -192,11 +196,16 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             printf("startPublish: Wrong number of arguments.\n");
         }
     }
+    // stop fetching and stop publishing does not handle rearranging windows and stopping timer event
     if (name == pluginMethods[ID_STOP_FETCHING])
     {
         if (argCount == 2)
         {
             rc = true;
+            NPString fetcherName = NPVARIANT_TO_STRING(args[0]);
+            
+            libInstance->stopFetching(fetcherName.UTF8Characters);
+            fetchingNum --;
         }
         else
         {
@@ -208,6 +217,9 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
         if (argCount == 0)
         {
             libInstance->stopPublishing();
+            
+            isPublishing = false;
+            
             // Free the 'corresponding' renderWindow as well? Decrement renderWindowNum. And if there are no more renderWindows,
             // Stop sending paint msgs; Something could go wrong with decrement process?
             

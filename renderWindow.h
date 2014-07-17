@@ -6,10 +6,11 @@
 //
 //
 
+#include <mutex>
+#include "BrowserRenderer.h"
+
 #ifndef __BasicPlugin__renderWindow__
 #define __BasicPlugin__renderWindow__
-
-#include <mutex>
 
 class renderWindow
 {
@@ -35,7 +36,11 @@ public:
     CGRect getRect();
     
     std::mutex renderBufferLock_;
+
+    // how is cross referencing happening here? Using a pointer to BrowserRenderer will result in an error.
+    void *bRenderer_;
     
+    bool bufferFilled_;
 private:
     // top and left of the top-left point in a specific window
     int bottom_;

@@ -27,8 +27,6 @@
 
 #include "BasicPlugin.h"
 
-#include "BrowserRenderer.h"
-
 // renderBuffer and window area should belong to each render window, which can be represented by a renderWindow class.
 renderWindow renderWindows[MAX_CLIENTS];
 int renderBufferCount = 0;
@@ -349,22 +347,36 @@ void drawPlugin(NPP instance, NPCocoaEvent* event)
     CGContextTranslateCTM(cgContext, 0.0, defaultWindowHeight);
     CGContextScaleCTM(cgContext, 1.0, -1.0);
     
-    //renderBufferLock.lock();
-    
     // A renderBuffer should be an array of buffers associated with renderBuffer in browserRenderer class, or with browserRenderer itself;
         
     for (int i = 0; i < renderBufferCount; i++)
     {
-        // the lock could be 
-        renderWindows[i].renderBufferLock_.lock();
+        // should do a performance comparison between having having the lock vs not (having the swapping buffers vs not)
+        
+        // Following module implements a renderBuffer switching module, however, the improvement in performance cannot be observed, and the trick in renderRGBFrame is what actually worked.
+        /*
+        if (renderWindows[i].bufferFilled_)
+        {
+            renderWindows[i].renderBufferLock_.lock();
+            
+            printf("Trying to swap RenderBuffer.\n");
+            
+            uint8_t *temp = renderWindows[i].renderBuffer_;
+            renderWindows[i].renderBuffer_ = ((BrowserRenderer *)renderWindows[i].bRenderer_)->getBuffer();
+            ((BrowserRenderer *)renderWindows[i].bRenderer_)->setBuffer(temp);
+            
+            renderWindows[i].bufferFilled_ = false;
+            
+            printf("RenderBuffer swapped.\n");
+            
+            renderWindows[i].renderBufferLock_.unlock();
+        }
+        */
         
         // cgRectMake starts with the bottom left point. the sequence of parameters are left, bottom, width and height.
         renderInRect(renderWindows[i].renderBuffer_, cgContext, renderWindows[i].getRect(), defaultWindowWidth, defaultWindowHeight);
         
-        renderWindows[i].renderBufferLock_.unlock();
-        
     }
-    //renderBufferLock.unlock();
     
     // Restore the cgcontext gstate.
     CGContextRestoreGState(cgContext);
