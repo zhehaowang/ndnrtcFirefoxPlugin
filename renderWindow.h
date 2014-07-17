@@ -12,6 +12,8 @@
 #ifndef __BasicPlugin__renderWindow__
 #define __BasicPlugin__renderWindow__
 
+#define MAX_WINDOW_NAME_LENGTH 50
+
 class renderWindow
 {
 public:
@@ -41,6 +43,8 @@ public:
     void *bRenderer_;
     
     bool bufferFilled_;
+    
+    char windowName_[MAX_WINDOW_NAME_LENGTH];
 private:
     // top and left of the top-left point in a specific window
     int bottom_;

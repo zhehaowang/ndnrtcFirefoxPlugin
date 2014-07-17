@@ -28,6 +28,8 @@
 #include "renderWindow.h"
 #include "BrowserRenderer.h"
 
+#include "LinkedList.h"
+
 #include <mutex>
 
 #define STRINGS_PRODUCTNAME "ndnrtc-plugin"
@@ -55,12 +57,12 @@ extern NPNetscapeFuncs* browser;
 
 // interesting that without static it does not work; with static it's semantically incorrect; the semantically correct way is below.
 extern renderWindow renderWindows[MAX_CLIENTS];
-extern int renderBufferCount;
+extern int renderWindowNum;
 
 extern std::mutex renderBufferLock;
 extern ndnrtc::NdnRtcLibrary * libInstance;
 
-extern bool isPublishing;
+extern int publishingNum;
 extern int fetchingNum;
 
 const size_t defaultWindowWidth = 640;

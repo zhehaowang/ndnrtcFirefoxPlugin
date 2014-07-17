@@ -29,7 +29,7 @@
 
 // renderBuffer and window area should belong to each render window, which can be represented by a renderWindow class.
 renderWindow renderWindows[MAX_CLIENTS];
-int renderBufferCount = 0;
+int renderWindowNum = 0;
 
 std::mutex renderBufferLock;
 
@@ -40,7 +40,7 @@ NdnRtcLibrary * libInstance;
 // The npobject to pass into the browser. Made global so that only one copy exists at a time
 NPObject *scriptableObj;
 
-bool isPublishing = false;
+int publishingNum = -1;
 int fetchingNum = 0;
 
 /* Symbol called once by the browser to initialize the plugin. */
@@ -161,7 +161,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     videoParams.segmentSize = 800;
     
     videoParams.ndnHub = "ndn/edu/ucla/remap";
-    videoParams.loggingLevel = ndnlog::NdnLoggerDetailLevelNone;
+    videoParams.loggingLevel = ndnlog::NdnLoggerDetailLevelAll;
     videoParams.host = "localhost";
     
     libInstance->configure(videoParams, audioParams);
@@ -348,7 +348,7 @@ void drawPlugin(NPP instance, NPCocoaEvent* event)
     
     // A renderBuffer should be an array of buffers associated with renderBuffer in browserRenderer class, or with browserRenderer itself;
         
-    for (int i = 0; i < renderBufferCount; i++)
+    for (int i = 0; i < renderWindowNum; i++)
     {
         // should do a performance comparison between having having the lock vs not (having the swapping buffers vs not)
         

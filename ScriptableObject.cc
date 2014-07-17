@@ -112,51 +112,63 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
         // Comparisons: Tested with external renderer and default renderer, both yields the same result. The test-app, however, takes a much shorter 'delay' time; I didn't remember encountering such problems before, with scriptableObject not yet implemented and fetching from remap-512 (which seems to be off?)
         // Solving: No idea yet; need to trace the problem further
         
-        // Issue: startFetch does not work for more than one windows;
-        // Reason: Still investigating.
-        
         if (argCount == 2)
         {
             NPString fetcherName = NPVARIANT_TO_STRING(args[0]);
             NPString fetcherPrefix = NPVARIANT_TO_STRING(args[1]);
             
-            printf("startFetch: Trying to start fetching from name '%s', prefix '%s'.\n", fetcherName.UTF8Characters, fetcherPrefix.UTF8Characters);
-            
-            BrowserRenderer *bRenderer = new BrowserRenderer();
-            
-            ParamsStruct videoParams, audioParams;
-            
-            libInstance->currentParams(videoParams, audioParams);
-            videoParams.producerId = fetcherName.UTF8Characters;
-            videoParams.ndnHub = fetcherPrefix.UTF8Characters;
-            
-            libInstance->configure(videoParams, audioParams);
-            
-            bRenderer->bufferIndex_ = renderBufferCount;
-            
-            // Still need to walk through the differences here; renderBuffer_ is only a pointer, supposedly
-            //renderWindows[renderBufferCount].renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
-            
-            renderWindows[renderBufferCount].renderBuffer_ = NULL;
-            //bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
-            
-            renderWindows[renderBufferCount].setBottom(0);
-            renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
-            renderWindows[renderBufferCount].generateRect();
-            
-            renderWindows[renderBufferCount].bRenderer_ = bRenderer;
-            
-            libInstance->startFetching(fetcherName.UTF8Characters, bRenderer);
-            
-            // schedule timer fires timer event every interval, in which paint event is fired
-            if (isPublishing == false && fetchingNum == 0)
+            int i = 0;
+            while ((strcmp(fetcherName.UTF8Characters, renderWindows[i].windowName_) || i==publishingNum) && (i<MAX_CLIENTS))
             {
-                browser->scheduletimer(instance_, 30, true, refreshTimerFunc);
+                i++;
             }
-            
-            renderBufferCount++;
-            fetchingNum ++;
-            
+            if (i == MAX_CLIENTS)
+            {
+                printf("startFetch: Trying to start fetching from name '%s', prefix '%s'.\n", fetcherName.UTF8Characters, fetcherPrefix.UTF8Characters);
+                
+                BrowserRenderer *bRenderer = new BrowserRenderer();
+                
+                ParamsStruct videoParams, audioParams;
+                
+                libInstance->currentParams(videoParams, audioParams);
+                videoParams.producerId = fetcherName.UTF8Characters;
+                videoParams.ndnHub = fetcherPrefix.UTF8Characters;
+                
+                libInstance->configure(videoParams, audioParams);
+                
+                bRenderer->bufferIndex_ = renderWindowNum;
+                
+                // Still need to walk through the differences here; renderBuffer_ is only a pointer, supposedly
+                //renderWindows[renderBufferCount].renderBuffer_ = (uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
+                
+                renderWindows[renderWindowNum].renderBuffer_ = NULL;
+                //bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
+                
+                renderWindows[renderWindowNum].setBottom(0);
+                renderWindows[renderWindowNum].setLeft(defaultWindowWidth * renderWindowNum);
+                renderWindows[renderWindowNum].generateRect();
+                
+                renderWindows[renderWindowNum].bRenderer_ = bRenderer;
+                
+                strcpy(renderWindows[renderWindowNum].windowName_, fetcherName.UTF8Characters);
+                
+                libInstance->startFetching(fetcherName.UTF8Characters, bRenderer);
+                
+                // schedule timer fires timer event every interval, in which paint event is fired
+                if (publishingNum == -1 && fetchingNum == 0)
+                {
+                    browser->scheduletimer(instance_, 30, true, refreshTimerFunc);
+                }
+                
+                renderWindowNum++;
+                fetchingNum ++;
+                
+                BOOLEAN_TO_NPVARIANT(true, *result);
+            }
+            else
+            {
+                BOOLEAN_TO_NPVARIANT(false, *result);
+            }
             rc = true;
         }
         else
@@ -180,35 +192,39 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             libInstance->currentParams(videoParams, audioParams);
             //videoParams.producerId = publisherName.UTF8Characters;
             
-            bRenderer->bufferIndex_ = renderBufferCount;
+            bRenderer->bufferIndex_ = renderWindowNum;
             
-            renderWindows[renderBufferCount].renderBuffer_ = NULL;
+            renderWindows[renderWindowNum].renderBuffer_ = NULL;
             //(uint8_t *)malloc(videoParams.renderHeight * videoParams.renderHeight * 3);
             //bzero(renderWindows[renderBufferCount].renderBuffer_, videoParams.renderHeight * videoParams.renderHeight * 3);
             
-            renderWindows[renderBufferCount].setBottom(0);
-            renderWindows[renderBufferCount].setLeft(defaultWindowWidth * renderBufferCount);
-            renderWindows[renderBufferCount].generateRect();
+            renderWindows[renderWindowNum].setBottom(0);
+            renderWindows[renderWindowNum].setLeft(defaultWindowWidth * renderWindowNum);
+            renderWindows[renderWindowNum].generateRect();
             
-            renderWindows[renderBufferCount].bRenderer_ = bRenderer;
+            renderWindows[renderWindowNum].bRenderer_ = bRenderer;
+            
+            strcpy(renderWindows[renderWindowNum].windowName_, publisherName.UTF8Characters);
             
             libInstance->startPublishing(publisherName.UTF8Characters, bRenderer);
             
             // schedule timer fires timer event every interval, in which paint event is fired
             
-            if (isPublishing == false && fetchingNum == 0)
+            if (publishingNum == -1 && fetchingNum == 0)
             {
                 browser->scheduletimer(instance_, 30, true, refreshTimerFunc);
             }
             
-            renderBufferCount++;
-            
-            isPublishing = true;
+            publishingNum = renderWindowNum;
+            renderWindowNum++;
             rc = true;
+            
+            BOOLEAN_TO_NPVARIANT(true, *result);
         }
         else
         {
             printf("startPublish: Wrong number of arguments.\n");
+            BOOLEAN_TO_NPVARIANT(false, *result);
         }
     }
     // stop fetching and stop publishing does not handle rearranging windows and stopping timer event
@@ -216,15 +232,46 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
     {
         if (argCount == 2)
         {
-            rc = true;
             NPString fetcherName = NPVARIANT_TO_STRING(args[0]);
+            NPString fetcherPrefix = NPVARIANT_TO_STRING(args[1]);
             
-            libInstance->stopFetching(fetcherName.UTF8Characters);
-            fetchingNum --;
+            int i = 0;
+            while ((strcmp(fetcherName.UTF8Characters, renderWindows[i].windowName_) || i==publishingNum) && (i<MAX_CLIENTS))
+            {
+                i++;
+            }
+            if (i < MAX_CLIENTS)
+            {
+                libInstance->stopFetching(fetcherName.UTF8Characters);
+            
+                i++;
+                
+                while (i < MAX_CLIENTS && renderWindows[i].bRenderer_ != NULL)
+                {
+                    renderWindows[i].setLeft(renderWindows[i].getLeft() - defaultWindowWidth);
+                    renderWindows[i].generateRect();
+                    
+                    ((BrowserRenderer *)renderWindows[i].bRenderer_)->bufferIndex_ = i - 1;
+                    
+                    i++;
+                }
+                
+                renderWindowNum --;
+                fetchingNum --;
+                
+                BOOLEAN_TO_NPVARIANT(true, *result);
+                // unregister timer event if needed
+            }
+            else
+            {
+                BOOLEAN_TO_NPVARIANT(false, *result);
+            }
+            rc = true;
         }
         else
         {
             printf("stopFetch: Wrong number of arguments.\n");
+            BOOLEAN_TO_NPVARIANT(false, *result);
         }
     }
     if (name == pluginMethods[ID_STOP_PUBLISHING])
@@ -233,18 +280,33 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
         {
             libInstance->stopPublishing();
             
-            isPublishing = false;
+            int i = publishingNum + 1;
+            
+            while (i < MAX_CLIENTS && renderWindows[i].bRenderer_ != NULL)
+            {
+                renderWindows[i].setLeft(renderWindows[i].getLeft() - defaultWindowWidth);
+                renderWindows[i].generateRect();
+                
+                ((BrowserRenderer *)renderWindows[i].bRenderer_)->bufferIndex_ = i - 1;
+                
+                i++;
+            }
             
             // Free the 'corresponding' renderWindow as well? Decrement renderWindowNum. And if there are no more renderWindows,
             // Stop sending paint msgs; Something could go wrong with decrement process?
             
-            // May need a linked-list and index for renderWindow, since it could be randomly referenced, dynamically allocated and de-allocated
-            // stop-publishing does not reset the drawing window/rect for now.
+            renderWindowNum --;
+            publishingNum = -1;
+            
             rc = true;
+            
+            BOOLEAN_TO_NPVARIANT(true, *result);
+            // unregister time event if needed.
         }
         else
         {
             printf("stopPublish: Wrong number of arguments");
+            BOOLEAN_TO_NPVARIANT(false, *result);
         }
     }
     
@@ -307,10 +369,10 @@ bool MyScriptableNPObject::GetProperty(NPIdentifier name, NPVariant *result)
             STRINGZ_TO_NPVARIANT(returnStr, *result);
         }
     }
-    if (name == pluginProperties[ID_IS_PUBLISHING])
+    if (name == pluginProperties[ID_PUBLISHING_NUM])
     {
         //printf("Property isPublishing exists");
-        BOOLEAN_TO_NPVARIANT(isPublishing, *result);
+        INT32_TO_NPVARIANT(publishingNum, *result);
         rc = true;
     }
     if (name == pluginProperties[ID_FETCHING_NUM])
@@ -321,7 +383,7 @@ bool MyScriptableNPObject::GetProperty(NPIdentifier name, NPVariant *result)
     // renderWindowNum should always be equal with fetchingNum (isPublishing ? 1 : 0)
     if (name == pluginProperties[ID_RENDER_WINDOW_NUM])
     {
-        INT32_TO_NPVARIANT(renderBufferCount, *result);
+        INT32_TO_NPVARIANT(renderWindowNum, *result);
         rc = true;
     }
     // Here it is assumed that type size_t can be casted to NP_Variant as an INT32 input

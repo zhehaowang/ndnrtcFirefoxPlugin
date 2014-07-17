@@ -39,7 +39,7 @@ enum {
 extern NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
 static const NPUTF8 *pluginPropertyNames[PLUGIN_PROPERTY_NUM] = {
     "version", // version is the debug property
-    "isPublishing", // isPublishing returns if the plugin's publishing
+    "publishingNum", // isPublishing returns if the plugin's publishing
     "fetchingNum",
     "renderWindowNum",
     "defaultWindowWidth",
@@ -48,7 +48,7 @@ static const NPUTF8 *pluginPropertyNames[PLUGIN_PROPERTY_NUM] = {
 
 enum {
     ID_VERSION = 0,
-    ID_IS_PUBLISHING,
+    ID_PUBLISHING_NUM,
     ID_FETCHING_NUM,
     ID_RENDER_WINDOW_NUM,
     ID_DEFAULT_WINDOW_WIDTH,
