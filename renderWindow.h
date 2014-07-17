@@ -14,11 +14,11 @@
 
 #define MAX_WINDOW_NAME_LENGTH 50
 
-class renderWindow
+class RenderWindow
 {
 public:
-    renderWindow();
-    ~renderWindow();
+    RenderWindow();
+    ~RenderWindow();
     
     int getBottom();
     int getLeft();

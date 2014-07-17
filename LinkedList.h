@@ -9,27 +9,27 @@
 #ifndef __BasicPlugin__LinkedList__
 #define __BasicPlugin__LinkedList__
 
-class node
+class Node
 {
 public:
-    node(void * data);
-    ~node();
+    Node(void * data);
+    ~Node();
     
-    node * next_;
+    Node * next_;
     void * data_;
 };
 
-class linkedList
+class LinkedList
 {
 public:
-    linkedList();
-    ~linkedList();
+    LinkedList();
+    ~LinkedList();
     
-    node * head_;
-    node * tail_;
-    node * curr_;
+    Node * head_;
+    Node * tail_;
+    Node * curr_;
     
-    bool addNode(node *newNode);
+    bool addNode(Node *newNode);
     bool freeAll();
 };
 

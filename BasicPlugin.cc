@@ -32,7 +32,7 @@
 
 // renderBuffer and window area should belong to each render window, which can be represented by a renderWindow class.
 // renderWindows are allocated in an array, deletion of a certain window will cause all windows after it to move forward
-renderWindow renderWindows[MAX_CLIENTS];
+RenderWindow renderWindows[MAX_CLIENTS];
 int renderWindowNum = 0;
 
 std::mutex renderBufferLock;
@@ -230,8 +230,10 @@ void NPP_Print(NPP instance, NPPrint* platformPrint)
 int16_t NPP_HandleEvent(NPP instance, void* event)
 {
     NPCocoaEvent* cocoaEvent = (NPCocoaEvent*)event;
+    RenderModel* rModel = new RenderModelCG();
+    
     if (cocoaEvent && (cocoaEvent->type == NPCocoaEventDrawRect)) {
-        drawPlugin(instance, (NPCocoaEvent*)event);
+        rModel->drawPlugin(instance, (NPCocoaEvent*)event);
         return 1;
     }
     
@@ -253,7 +255,6 @@ NPObject* NPP_GetScriptableObject(NPP npp)
         //NPObject *newObj = NPN_CreateObject(instance, &(MyScriptableNPObject::_npclass));
         //NPN_RetainObject(newObj);
         
-        // GetValue is also fired from another thread...it goes against the theory that NetscapeFuncs->functions shouldn't be called in another thread.
         scriptableObj = browser->createobject(npp, &(MyScriptableNPObject::_npclass));
     }
     browser->retainobject(scriptableObj);
@@ -291,101 +292,4 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
 {
     return NPERR_GENERIC_ERROR;
-}
-
-// this is a sample function that draws a frame with RGB array as input, using CoreGraphics
-void renderInRect(uint8_t *buffer, CGContextRef context, CGRect frame, size_t width, size_t height)
-{
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-    
-    uint8_t * alphaBuffer = (uint8_t *)malloc(width * height * 4);
-    
-    // According to Quartz/AppleDevelopment documentation, the only byte format for rendering RGB bytes seems to take only 32bpp, so here Peter's 24bpp input is copied, and an empty alpha byte is added after each RGB byte.
-    int i = 0, j = 0;
-    while (i < width * height * 4)
-    {
-        alphaBuffer[i++] = buffer[j++];
-        alphaBuffer[i++] = buffer[j++];
-        alphaBuffer[i++] = buffer[j++];
-        
-        // wonder why this gives a different result:
-        
-        //memcpy(alphaBuffer+i, buffer+j, 3);
-        //i+=3;
-        //j+=3;
-        // a random alpha
-        
-        alphaBuffer[i++] = 0;
-    }
-    
-    CGContextRef bitMapContext = CGBitmapContextCreate(alphaBuffer, width, height, 8, 4*width, colorSpace, kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little);
-    
-    CGColorSpaceRelease(colorSpace);
-    CGImageRef bitMapImage = CGBitmapContextCreateImage(bitMapContext);
-    
-    CGContextDrawImage(context, frame, bitMapImage);
-    CGImageRelease(bitMapImage);
-    
-    CGContextRelease(bitMapContext);
-    
-    free(alphaBuffer);
-}
-
-/* drawPlugin is called every time the drawing event is fired, which is called every interval. 
-   It handles the repaint of the whole plugin. */
-void drawPlugin(NPP instance, NPCocoaEvent* event)
-{
-    PluginInstance* currentInstance = (PluginInstance*)(instance->pdata);
-    // Okay, so this works for Carbon event model, but not Cocoa event model
-    //CGContextRef cgContext = ((NP_CGContext *)(((PluginInstance *)(instance->pdata))->window.window))->context;
-    
-    // This way of getting drawing context seems to be the only working way for Cocoa event model
-    CGContextRef cgContext = event->data.draw.context;
-
-    if (!cgContext) {
-        return;
-    }
-    
-    // Save the cgcontext gstate.
-    CGContextSaveGState(cgContext);
-    
-    // before passing into bitmapContext, flip cgContext
-    CGContextTranslateCTM(cgContext, 0.0, defaultWindowHeight);
-    CGContextScaleCTM(cgContext, 1.0, -1.0);
-    
-    // A renderBuffer should be an array of buffers associated with renderBuffer in browserRenderer class, or with browserRenderer itself;
-        
-    for (int i = 0; i < renderWindowNum; i++)
-    {
-        // should do a performance comparison between having having the lock vs not (having the swapping buffers vs not)
-        
-        // Following module implements a renderBuffer switching module, however, the improvement in performance cannot be observed, and the trick in renderRGBFrame is what actually worked.
-        /*
-        if (renderWindows[i].bufferFilled_)
-        {
-            renderWindows[i].renderBufferLock_.lock();
-            
-            printf("Trying to swap RenderBuffer.\n");
-            
-            uint8_t *temp = renderWindows[i].renderBuffer_;
-            renderWindows[i].renderBuffer_ = ((BrowserRenderer *)renderWindows[i].bRenderer_)->getBuffer();
-            ((BrowserRenderer *)renderWindows[i].bRenderer_)->setBuffer(temp);
-            
-            renderWindows[i].bufferFilled_ = false;
-            
-            printf("RenderBuffer swapped.\n");
-            
-            renderWindows[i].renderBufferLock_.unlock();
-        }
-        */
-        
-        // cgRectMake starts with the bottom left point. the sequence of parameters are left, bottom, width and height.
-        if (renderWindows[i].bufferFilled_)
-        {
-            renderInRect(renderWindows[i].renderBuffer_, cgContext, renderWindows[i].getRect(), defaultWindowWidth, defaultWindowHeight);
-        }
-    }
-    
-    // Restore the cgcontext gstate.
-    CGContextRestoreGState(cgContext);
 }

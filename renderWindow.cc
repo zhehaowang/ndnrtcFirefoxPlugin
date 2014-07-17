@@ -9,7 +9,7 @@
 #include "renderWindow.h"
 #include "BasicPlugin.h"
 
-renderWindow::renderWindow()
+RenderWindow::RenderWindow()
 {
     bottom_ = 0;
     left_ = 0;
@@ -20,62 +20,62 @@ renderWindow::renderWindow()
     bufferFilled_ = false;
 }
 
-renderWindow::~renderWindow()
+RenderWindow::~RenderWindow()
 {
     free (renderBuffer_);
 }
 
-size_t renderWindow::getHeight()
+size_t RenderWindow::getHeight()
 {
     return height_;
 }
 
-size_t renderWindow::getWidth()
+size_t RenderWindow::getWidth()
 {
     return width_;
 }
 
-bool renderWindow::setWidth(size_t width)
+bool RenderWindow::setWidth(size_t width)
 {
     width_ = width;
     return true;
 }
 
-bool renderWindow::setHeight(size_t height)
+bool RenderWindow::setHeight(size_t height)
 {
     height_ = height;
     return true;
 }
 
-int renderWindow::getLeft()
+int RenderWindow::getLeft()
 {
     return left_;
 }
 
-int renderWindow::getBottom()
+int RenderWindow::getBottom()
 {
     return bottom_;
 }
 
-bool renderWindow::setLeft(int left)
+bool RenderWindow::setLeft(int left)
 {
     left_ = left;
     return true;
 }
 
-bool renderWindow::setBottom(int bottom)
+bool RenderWindow::setBottom(int bottom)
 {
     bottom_ = bottom;
     return true;
 }
 
-bool renderWindow::generateRect()
+bool RenderWindow::generateRect()
 {
     rect_ = CGRectMake(left_, bottom_, width_, height_);
     return true;
 }
 
-CGRect renderWindow::getRect()
+CGRect RenderWindow::getRect()
 {
     return rect_;
 }

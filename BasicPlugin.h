@@ -27,10 +27,11 @@
 #include "ndnrtc-library.h"
 #include "renderWindow.h"
 #include "BrowserRenderer.h"
-
 #include "LinkedList.h"
+#include "CGRenderer.h"
 
 #include <mutex>
+
 
 #define STRINGS_PRODUCTNAME "ndnrtc-plugin"
 #define STRINGS_FILEDESCRIPTION "Test description"
@@ -56,7 +57,7 @@ typedef struct PluginInstance {
 extern NPNetscapeFuncs* browser;
 
 // interesting that without static it does not work; with static it's semantically incorrect; the semantically correct way is below.
-extern renderWindow renderWindows[MAX_CLIENTS];
+extern RenderWindow renderWindows[MAX_CLIENTS];
 extern int renderWindowNum;
 
 extern std::mutex renderBufferLock;
@@ -90,9 +91,6 @@ int16_t NPP_HandleEvent(NPP instance, void* event);
 void    NPP_URLNotify(NPP instance, const char* URL, NPReason reason, void* notifyData);
 NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value);
 NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value);
-
-void drawPlugin(NPP instance, NPCocoaEvent* event);
-void renderInRect(CGContextRef context, CGRect frame, size_t width, size_t height);
 
 #endif
 
