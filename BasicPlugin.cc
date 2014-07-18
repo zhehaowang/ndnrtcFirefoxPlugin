@@ -41,6 +41,8 @@ NPNetscapeFuncs* browser;
 
 NdnRtcLibrary * libInstance;
 
+RenderModel *rModel;
+
 // The npobject to pass into the browser. Made global so that only one copy exists at a time.
 NPObject *scriptableObj;
 
@@ -83,8 +85,6 @@ NPError NP_GetEntryPoints(NPPluginFuncs* pluginFuncs)
     pluginFuncs->getvalue = NPP_GetValue;
     pluginFuncs->setvalue = NPP_SetValue;
     
-    //pluginFuncs->
-    
     return NPERR_NO_ERROR;
 }
 
@@ -125,16 +125,10 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     
     /* Browser memory allocation */
     versionStr = (NPUTF8*)(browser->memalloc(strlen(PLUGIN_VERSION) + 1));
-    // This should be freed by browser?
     
     /* Select the Core Graphics drawing model. */
-    NPBool supportsCoreGraphics = false;
-    if (browser->getvalue(instance, NPNVsupportsCoreGraphicsBool, &supportsCoreGraphics) == NPERR_NO_ERROR && supportsCoreGraphics) {
-        browser->setvalue(instance, NPPVpluginDrawingModel, (void*)NPDrawingModelCoreGraphics);
-    } else {
-        printf("CoreGraphics drawing model not supported, can't create a plugin instance.\n");
-        return NPERR_INCOMPATIBLE_VERSION_ERROR;
-    }
+    rModel = new RenderModelCG();
+    rModel->selectRenderModel(instance, browser);
     
     /* Select the Cocoa event model. */
     NPBool supportsCocoaEvents = false;
@@ -230,7 +224,6 @@ void NPP_Print(NPP instance, NPPrint* platformPrint)
 int16_t NPP_HandleEvent(NPP instance, void* event)
 {
     NPCocoaEvent* cocoaEvent = (NPCocoaEvent*)event;
-    RenderModel* rModel = new RenderModelCG();
     
     if (cocoaEvent && (cocoaEvent->type == NPCocoaEventDrawRect)) {
         rModel->drawPlugin(instance, (NPCocoaEvent*)event);

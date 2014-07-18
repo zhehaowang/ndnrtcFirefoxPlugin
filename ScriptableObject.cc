@@ -22,8 +22,6 @@ char * versionStr = NULL;
 void refreshTimerFunc(NPP instance, uint32_t timerID)
 {
     // invalidate rect sends a paint message
-    // Paint message should always be fired in main thread, trying to fire this event in browserRenderer's renderRGBFrame will cause crash: this statement is not true; earlier crashes were caused by wrong declarations of browser.
-    
     browser->invalidaterect(instance, &(((PluginInstance *)instance->pdata)->window.clipRect));
     
     return;

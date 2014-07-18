@@ -28,7 +28,7 @@
 #include "renderWindow.h"
 #include "BrowserRenderer.h"
 #include "LinkedList.h"
-#include "CGRenderer.h"
+#include "RenderModel.h"
 
 #include <mutex>
 
