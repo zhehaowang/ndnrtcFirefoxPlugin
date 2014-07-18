@@ -32,7 +32,6 @@
 
 #include <mutex>
 
-
 #define STRINGS_PRODUCTNAME "ndnrtc-plugin"
 #define STRINGS_FILEDESCRIPTION "Test description"
 

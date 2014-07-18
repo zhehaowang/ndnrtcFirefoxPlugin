@@ -52,8 +52,6 @@ BrowserRenderer::renderRGBFrame(int64_t timestamp, int width, int height,
     
     renderWindows[bufferIndex_].bufferFilled_ = true;
     
-    // For a local testing connection, starting a publisher first and consumer second won't bring me any data.
-    // Issue being debugged.
     //printf("renderRGBFrame called for render window %d.\n", bufferIndex_);
     
     //buffer_ = temp;

@@ -14,21 +14,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * This sample plugin uses the Cocoa event model and the Core Graphics
- * drawing model.
- */
-
-// the source is in C, added rendering function tested by Zhehao
-// um should remove some of those unnecessary frameworks
-
-// InfoPList.string is considered as irrelevant and deleted.
-// Error messages telling the key used being wrong start to arise
-
-
 // Issue: refresh page crashes the plugin, has to refresh again.
+// Issue: Consumer delay too large
+// Issue: Configure dylib load path, so that libndnrtc-sa.dylib does not need to be in system paths like "/usr/local/lib"
 
 #include "BasicPlugin.h"
+
+#define PATH_LENGTH 200
 
 // renderBuffer and window area should belong to each render window, which can be represented by a renderWindow class.
 // renderWindows are allocated in an array, deletion of a certain window will cause all windows after it to move forward
@@ -110,6 +102,50 @@ static void initializeIdentifiers()
     //pluginMethods[0] = browser->getstringidentifier(pluginMethodNames[0]);
 }
 
+static void setNdnrtcDefaultConfiguration()
+{
+    // Below ParamsStruct is a definition of default params
+    ParamsStruct videoParams, audioParams;
+    
+    libInstance->getDefaultParams(videoParams, audioParams);
+    
+    videoParams.producerId = "zhehao";
+    
+    videoParams.useFec = false;
+    videoParams.segmentSize = 800;
+    
+    videoParams.ndnHub = "ndn/edu/ucla/remap";
+    videoParams.loggingLevel = ndnlog::NdnLoggerDetailLevelAll;
+    videoParams.host = "localhost";
+    
+    libInstance->configure(videoParams, audioParams);
+}
+
+static bool getPluginLibraryPath(char * libPath)
+{
+    ::Dl_info dlinfo;
+    if (::dladdr((void*)::NP_Initialize, &dlinfo) != 0) {
+        // Library path configuration; while loop used for neglecting last name component.
+        std::string pluginPath = dlinfo.dli_fname;
+        
+        memset(libPath, 0, PATH_LENGTH);
+        
+        strcat(libPath, pluginPath.c_str());
+        int i = strlen(libPath);
+        while (libPath[i] != '/')
+        {
+            libPath[i] = 0;
+            i--;
+        }
+        strcat(libPath, "libndnrtc-sa.dylib");
+        printf("%s\n", libPath);
+        
+        return true;
+    } else {
+        return false;
+    }
+}
+
 /* Called to create a new instance of the plugin. */
 NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
@@ -139,33 +175,17 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
         return NPERR_INCOMPATIBLE_VERSION_ERROR;
     }
     
-    // Though it's loading from an absolute path, still, for some reasons, the lib in /usr/lib with the same name gets loaded first.
-    // Notice: it still is trying to load from /usr/lib, am I linking against the wrong stuff? No unlikely, build phase passed, but still, firefox does not know where the library is...
-    libInstance = NdnRtcLibrary::instantiateLibraryObject("/Library/Internet Plug-Ins/BasicPlugin.bundle/Contents/Resources/libndnrtc-sa.dylib");
+    // Though it's loading from an absolute path, still, for some reasons, the lib in /usr/lib with the same name gets loaded first, and usually, the library specified does not matter at all.
+    char libPath[PATH_LENGTH] = "";
+    getPluginLibraryPath(libPath);
+    
+    libInstance = NdnRtcLibrary::instantiateLibraryObject(libPath);
     
     obDerived * debugOb = new obDerived();
     
     libInstance->setObserver(debugOb);
     
-    // Below ParamsStruct is a definition of default params
-    ParamsStruct videoParams, audioParams;
-    
-    libInstance->getDefaultParams(videoParams, audioParams);
-    
-    printf("***\t***\n");
-    printf("***BUILD NUMBER: %d\n", libInstance->getBuildNumber());
-    
-    videoParams.producerId = "zhehao";
-    
-    //videoParams.useFec = false;
-    // So segment size differs from the default one.
-    videoParams.segmentSize = 800;
-    
-    videoParams.ndnHub = "ndn/edu/ucla/remap";
-    videoParams.loggingLevel = ndnlog::NdnLoggerDetailLevelAll;
-    videoParams.host = "localhost";
-    
-    libInstance->configure(videoParams, audioParams);
+    setNdnrtcDefaultConfiguration();
     
     // The lib's alloc'ed in heap and is not freed
     return NPERR_NO_ERROR;
@@ -175,7 +195,6 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
 NPError NPP_Destroy(NPP instance, NPSavedData** save)
 {
     free(instance->pdata);
-    
     return NPERR_NO_ERROR;
 }
 
@@ -185,7 +204,6 @@ NPError NPP_SetWindow(NPP instance, NPWindow* window)
     PluginInstance* currentInstance = (PluginInstance*)(instance->pdata);
     
     //window->type = NPWindowTypeDrawable;
-    
     currentInstance->window = *window;
     
     return NPERR_NO_ERROR;

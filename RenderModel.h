@@ -14,6 +14,7 @@
 
 #include "BasicPlugin.h"
 
+// RenderModel is the interface class for actual renderers.
 class RenderModel
 {
 public:

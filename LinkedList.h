@@ -19,6 +19,7 @@ public:
     void * data_;
 };
 
+// LinkedList class is not used or tested for now.
 class LinkedList
 {
 public:
