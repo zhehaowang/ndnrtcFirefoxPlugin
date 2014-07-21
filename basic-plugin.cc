@@ -14,7 +14,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Issue: refresh page crashes the plugin, has to refresh again.
+// Issue: refresh page crashes the plugin, has to refresh again, crash happened once with logs in log directory.
 // Issue: Consumer delay too large
 // Issue: Configure dylib load path, so that libndnrtc-sa.dylib does not need to be in system paths like "/usr/local/lib"
 

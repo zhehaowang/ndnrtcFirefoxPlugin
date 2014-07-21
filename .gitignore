@@ -22,3 +22,6 @@
 
 # Project files
 *.xcodeproj
+
+# Log files
+*.log
