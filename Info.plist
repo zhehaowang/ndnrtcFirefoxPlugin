@@ -20,7 +20,7 @@
 	<string>Basic plugin sample, part of the Gecko NPAPI SDK</string>
 	<key>WebPluginMIMETypes</key>
 	<dict>
-		<key>application/basic-plugin</key>
+		<key>application/basic-plugin-1</key>
 		<dict>
 			<key>WebPluginTypeDescription</key>
 			<string>Basic plugin sample</string>

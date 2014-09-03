@@ -15,10 +15,16 @@
 
 #include "params.h"
 #include "statistics.h"
-#include "ndnrtc-observer.h"
 #include "external-renderer.h"
+#include "external-capturer.h"
 
 namespace ndnrtc {
+    
+    class INdnRtcObjectObserver {
+    public:
+        virtual ~INdnRtcObjectObserver(){}
+        virtual void onErrorOccurred(const char *errorMessage) = 0;
+    };
     
     /**
      * This abstract class declares interface for the library's observer - an
@@ -62,12 +68,14 @@ namespace ndnrtc {
         static NdnRtcLibrary *instantiateLibraryObject(const char *libPath)
         {
             void *libHandle = dlopen(libPath, RTLD_LAZY);
-            
+
             if (libHandle == NULL)
             {
+                // this thing does not work...
+                /*
                 LogError("")
                 << "error while loading NdnRTC library: " << dlerror() << std::endl;
-                
+                */
                 return NULL;
             }
             
@@ -163,6 +171,32 @@ namespace ndnrtc {
          */
         virtual int startPublishing(const char* username,
                                     IExternalRenderer* const renderer);
+        
+        /**
+         * Initializes local publisher. Publishing starts as soon as user starts
+         * capturing new video frames and delivers them using IExternalCapturer
+         * interface.
+         * @param username Which will be used for publishing media
+         * @param capturer Pointer to an object conforming to IExternalCapturer
+         * @see IExternalCapturer
+         */
+        virtual int initPublishing(const char* username,
+                                   IExternalCapturer** const capturer);
+
+        /**
+         * Initializes local publisher. Publishing starts as soon as user starts
+         * capturing new video frames and delivers them using IExternalCapturer
+         * interface. Rendering is delegated to the external renderer object
+         * which should conform to the IExternalRenderer interface.
+         * @param username Which will be used for publishing media
+         * @param capturer Pointer to an object conforming to IExternalCapturer
+         * @param renderer Pointer to external rendering class which conforms to
+         * @see IExternalRenderer, IExternalCapturer
+         */
+        virtual int initPublishing(const char* username,
+                                   IExternalCapturer** const capturer,
+                                   IExternalRenderer* const renderer);
+        
         /**
          * Stops publishing. If publishing was not started, does nothing.
          */
@@ -190,6 +224,46 @@ namespace ndnrtc {
          */
         virtual int startFetching(const char* producerId,
                                   IExternalRenderer* const renderer);
+        
+        /*** ChronoChat and conference discovery related functions by Zhehaos ***/
+        /**
+         * Test implementation in library by Zhehao.
+         * Starts chrono-chat.
+         * @param usrName User name that's going to be used in chrono-chat.
+         * @param hubPrefix The prefix of local user.
+         * @param chatroom Prefix of Chatroom.
+         */
+        virtual int startChronoChat(const char* usrName,
+                                    const char* hubPrefix, 
+                                    const char* chatroom);
+        /**
+         * Test implementation in library by Zhehao.
+         * Stops chrono-chat.
+         */
+        virtual int stopChronoChat();
+        
+        virtual int sendChatMessage(const std::string& msg);
+        virtual int leaveChat();
+        
+        /**
+         * Exfil based conference discovery
+         */
+        virtual int startActiveUserDiscovery();
+        
+        /**
+         * Stop exfil based conference discovery
+         */
+        virtual int stopActiveUserDiscovery();
+        
+        /**
+         * Become active could be called after startPublishing
+         */
+        virtual int becomeActive(std::string conferenceName, std::string prefix);
+        
+        virtual int becomeInactive();
+        
+        /*** ChronoChat and conference discovery functions ends ***/
+        
         /**
          * Stops fetching from the remote user. If fetching was not intitated, 
          * does nothing.
@@ -215,10 +289,11 @@ namespace ndnrtc {
         virtual void* getLibraryHandle(){ return libraryHandle_; };
         
         /**
-         * Returns current build number
-         * @return Current build number
+         * Returns current library version
+         * @param versionString A pointer to the string where the library
+         * version will be stored.
          */
-        virtual int getBuildNumber();
+        virtual void getVersionString(char **versionString);
         
         /**
          * Arranges all app windows on the screen
@@ -237,6 +312,11 @@ namespace ndnrtc {
                                     const char *format, ...) const;
         void notifyObserver(const char *state, const char *args) const;
         virtual void onErrorOccurred(const char *errorMessage);
+        
+        bool isDiscovering_;
+        int preparePublishing(const char* username,
+                              bool useExternalCapturer,
+                              IExternalRenderer* const renderer);
     };
 }
 

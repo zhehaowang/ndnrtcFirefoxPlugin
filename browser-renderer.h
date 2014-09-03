@@ -10,10 +10,8 @@
 #define __ndnrtc__renderer_stub__
 
 #include <iostream>
-#include "ndnrtc-library.h"
 #include "basic-plugin.h"
 
-#include "external-renderer.h"
 #include "render-window.h"
 
 using namespace ndnrtc;

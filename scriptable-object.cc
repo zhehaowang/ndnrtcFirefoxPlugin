@@ -369,7 +369,7 @@ bool MyScriptableNPObject::GetProperty(NPIdentifier name, NPVariant *result)
     }
     if (name == pluginProperties[ID_PUBLISHING_NUM])
     {
-        //printf("Property isPublishing exists");
+        printf("Property isPublishing exists");
         INT32_TO_NPVARIANT(publishingNum, *result);
         rc = true;
     }

@@ -94,7 +94,7 @@ class obDerived : public INdnRtcLibraryObserver
 public:
     void onStateChanged(const char *state, const char *args)
     {
-        //printf("***DEBUG: %s - %s\n", state, args);
+        printf("***DEBUG: %s - %s\n", state, args);
         return;
     }
 };
@@ -158,6 +158,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     instance->pdata = pluginInstance;
     
     /* Initialize identifiers */
+    
     browser->getstringidentifiers(pluginMethodNames, PLUGIN_METHOD_NUM, pluginMethods);
     browser->getstringidentifiers(pluginPropertyNames, PLUGIN_PROPERTY_NUM, pluginProperties);
     
@@ -169,6 +170,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     rModel->selectRenderModel(instance, browser);
     
     /* Select the Cocoa event model. */
+    
     NPBool supportsCocoaEvents = false;
     if (browser->getvalue(instance, NPNVsupportsCocoaBool, &supportsCocoaEvents) == NPERR_NO_ERROR && supportsCocoaEvents) {
         browser->setvalue(instance, NPPVpluginEventModel, (void*)NPEventModelCocoa);
@@ -178,7 +180,12 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     }
     
     // Though it's loading from an absolute path, still, for some reasons, the lib in /usr/lib with the same name gets loaded first, and usually, the library specified does not matter at all.
+    
+    printf("trying to get library path\n");
+    
+    
     char libPath[PATH_LENGTH] = "";
+    
     getPluginLibraryPath(libPath);
     
     libInstance = NdnRtcLibrary::instantiateLibraryObject(libPath);

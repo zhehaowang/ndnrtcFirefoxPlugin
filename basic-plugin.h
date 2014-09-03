@@ -23,8 +23,9 @@
 #include "npapiHeaders/npapi.h"
 #include "npapiHeaders/npfunctions.h"
 
+#include "ndnrtcHeader/ndnrtc-library.h"
+
 #include "scriptable-object.h"
-#include "ndnrtc-library.h"
 #include "render-window.h"
 #include "browser-renderer.h"
 #include "linked-list.h"
