@@ -6,7 +6,7 @@
 //
 //
 
-#include "RenderModel.h"
+#include "render-model.h"
 
 void RenderModelCA::renderInRect(uint8_t *buffer, CGContextRef context, CGRect frame, size_t width, size_t height)
 {

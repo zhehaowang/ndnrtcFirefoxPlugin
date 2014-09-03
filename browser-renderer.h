@@ -11,10 +11,10 @@
 
 #include <iostream>
 #include "ndnrtc-library.h"
-#include "BasicPlugin.h"
+#include "basic-plugin.h"
 
 #include "external-renderer.h"
-#include "renderWindow.h"
+#include "render-window.h"
 
 using namespace ndnrtc;
 

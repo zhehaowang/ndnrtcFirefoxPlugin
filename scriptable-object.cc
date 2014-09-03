@@ -6,10 +6,10 @@
 //
 //
 
-#include "ScriptableObject.h"
-#include "BasicPlugin.h"
+#include "scriptable-object.h"
+#include "basic-plugin.h"
 
-#include "BrowserRenderer.h"
+#include "browser-renderer.h"
 
 using namespace ndnrtc;
 

@@ -12,7 +12,7 @@
 #include "npapiHeaders/npapi.h"
 #include "npapiHeaders/npfunctions.h"
 
-#include "BasicPlugin.h"
+#include "basic-plugin.h"
 
 // RenderModel is the interface class for actual renderers.
 class RenderModel

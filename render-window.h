@@ -7,7 +7,7 @@
 //
 
 #include <mutex>
-#include "BrowserRenderer.h"
+#include "browser-renderer.h"
 
 #ifndef __BasicPlugin__renderWindow__
 #define __BasicPlugin__renderWindow__

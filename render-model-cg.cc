@@ -6,7 +6,7 @@
 //
 //
 
-#include "RenderModel.h"
+#include "render-model.h"
 
 // this is a sample function that draws a frame with RGB array as input, using CoreGraphics
 

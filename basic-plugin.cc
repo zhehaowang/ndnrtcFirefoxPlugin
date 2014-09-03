@@ -16,9 +16,11 @@
 
 // Issue: refresh page crashes the plugin, has to refresh again, crash happened once with logs in log directory.
 // Issue: Consumer delay too large
-// Issue: Configure dylib load path, so that libndnrtc-sa.dylib does not need to be in system paths like "/usr/local/lib"
+// Issue: Configure dylib load path, so that libndnrtc.dylib does not need to be in system paths like "/usr/local/lib"
 
-#include "BasicPlugin.h"
+// Git commit rename file and linking issues;
+
+#include "basic-plugin.h"
 
 #define PATH_LENGTH 200
 
@@ -137,7 +139,7 @@ static bool getPluginLibraryPath(char * libPath)
             libPath[i] = 0;
             i--;
         }
-        strcat(libPath, "libndnrtc-sa.dylib");
+        strcat(libPath, "libndnrtc.dylib");
         printf("%s\n", libPath);
         
         return true;

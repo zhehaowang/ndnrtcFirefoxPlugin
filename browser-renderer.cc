@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Peter Gusev. All rights reserved.
 //
 
-#include "BrowserRenderer.h"
+#include "browser-renderer.h"
 
 uint8_t*
 BrowserRenderer::getFrameBuffer(int width, int height)

@@ -12,7 +12,7 @@
 #include "npapiHeaders/npapi.h"
 #include "npapiHeaders/npfunctions.h"
 
-#include "BasicPlugin.h"
+#include "basic-plugin.h"
 
 #define PLUGIN_METHOD_NUM 5
 #define PLUGIN_PROPERTY_NUM 6

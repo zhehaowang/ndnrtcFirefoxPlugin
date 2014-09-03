@@ -6,8 +6,8 @@
 //
 //
 
-#include "renderWindow.h"
-#include "BasicPlugin.h"
+#include "render-window.h"
+#include "basic-plugin.h"
 
 RenderWindow::RenderWindow()
 {

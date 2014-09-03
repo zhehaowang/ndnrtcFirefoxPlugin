@@ -23,12 +23,12 @@
 #include "npapiHeaders/npapi.h"
 #include "npapiHeaders/npfunctions.h"
 
-#include "ScriptableObject.h"
+#include "scriptable-object.h"
 #include "ndnrtc-library.h"
-#include "renderWindow.h"
-#include "BrowserRenderer.h"
-#include "LinkedList.h"
-#include "RenderModel.h"
+#include "render-window.h"
+#include "browser-renderer.h"
+#include "linked-list.h"
+#include "render-model.h"
 
 #include <mutex>
 
