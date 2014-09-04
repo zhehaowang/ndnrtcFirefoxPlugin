@@ -24,7 +24,7 @@ namespace ndnrtc {
      * This callback function pointer is temporarily added by Zhehao, for browser callback
      * purposes.
      */
-    typedef bool (*DisplayCallback)(const char *, const char *, const char *);
+    typedef bool (*DisplayCallback)(const char *, const char *, const char *, void *);
     
     class INdnRtcObjectObserver {
     public:
@@ -236,18 +236,23 @@ namespace ndnrtc {
          * @param usrName User name that's going to be used in chrono-chat.
          * @param hubPrefix The prefix of local user.
          * @param chatroom Prefix of Chatroom.
+         * Ugly part starts:
          * @param displayCallback Callback called when there is something to display.
          *        For the sake of calling browser functions from NPAPI plugin,
          *        this takes the form of (object name, method name, string message)
          * @param objName input parameter for displayCallback
          * @param funcName input parameter for displayCallback (Both were added for simpicity for ndncomm demo)
+         * @param nppPointer indicates the pointer to npp instance, which is becoming more and more
+         *        browser specific, should switch to using func_lib::function for prototype instead, 
+         *        which is not used now because browser part does not have func_lib::bind yet.
          */
         virtual int startChronoChat(const char* usrName,
                                     const char* hubPrefix, 
                                     const char* chatroom,
                                     DisplayCallback displayCallback = NULL,
                                     const char* objName = "",
-                                    const char* funcName = "");
+                                    const char* funcName = "",
+                                    void* nppInstance = NULL);
         
         /**
          * Test implementation in library by Zhehao.

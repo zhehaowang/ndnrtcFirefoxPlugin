@@ -30,6 +30,7 @@ void refreshTimerFunc(NPP instance, uint32_t timerID)
 }
 
 // Hum...this static method does not work yet...consider adding void * to callback function
+/*
 bool staticJsDisplayCallback(const char *objName, const char *funcName, const char *message)
 {
     bool rc = false;
@@ -71,8 +72,9 @@ bool staticJsDisplayCallback(const char *objName, const char *funcName, const ch
         printf("StaticJSCallback: nppInstance is still null.\n");
     }
     return (rc);
-    
+ 
 }
+*/
 
 MyScriptableNPObject::MyScriptableNPObject(NPP instance)
 {
@@ -370,8 +372,7 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             NPString chatroomName = NPVARIANT_TO_STRING(args[2]);
             printf("joinChat: Trying to join chatroom %s, under prefix %s, username %s.\n", chatroomName.UTF8Characters, hubPrefix.UTF8Characters, userName.UTF8Characters);
             
-            // should do a startChronoChat with display callbacks
-            libInstance->startChronoChat(userName.UTF8Characters, hubPrefix.UTF8Characters, chatroomName.UTF8Characters, &staticJsDisplayCallback, "console", "log");
+            libInstance->startChronoChat(userName.UTF8Characters, hubPrefix.UTF8Characters, chatroomName.UTF8Characters, &MyScriptableNPObject::callbackStaticCast, "console", "log", this);
             rc = true;
             inChat = true;
         }
@@ -434,6 +435,9 @@ bool MyScriptableNPObject::callbackStaticCast(const char *objName, const char *f
 
 // for now, this function is not called except for direct debugging purposes, since this function is member, and has to be cast to static, with 'this' as calling parameter, too
 // a naive hack using a global NPP is used for actual display callback instead
+//
+// hum...wondering why this does not work...consider using similar strategy with the external renderer class in ndnrtc.
+// Could it be that instance_ is no longer valid, another scriptable object is being requested?
 bool MyScriptableNPObject::jsDisplayCallback(const char *objName, const char *funcName, const char *message)
 {
     printf("jsDisplayCallback called with argument objName %s, funcName %s, message %s\n", objName, funcName, message);
