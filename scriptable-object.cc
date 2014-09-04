@@ -18,6 +18,8 @@ NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
 
 char * versionStr = NULL;
 
+NPP nppInstance = NULL;
+
 /* Timer func is called every interval. In each timer func a paint event is fired. */
 void refreshTimerFunc(NPP instance, uint32_t timerID)
 {
@@ -27,9 +29,56 @@ void refreshTimerFunc(NPP instance, uint32_t timerID)
     return;
 }
 
+// Hum...this static method does not work yet...consider adding void * to callback function
+bool staticJsDisplayCallback(const char *objName, const char *funcName, const char *message)
+{
+    bool rc = false;
+    
+    if (nppInstance != NULL)
+    {
+        printf("jsDisplayCallback called with argument objName %s, funcName %s, message %s\n", objName, funcName, message);
+        
+        // Get window object.
+        NPObject* window = NULL;
+        browser->getvalue(nppInstance, NPNVWindowNPObject, &window);
+        
+        // Get console object.
+        NPVariant consoleVar;
+        NPIdentifier id = browser->getstringidentifier(objName);
+        browser->getproperty(nppInstance, window, id, &consoleVar);
+        NPObject* console = NPVARIANT_TO_OBJECT(consoleVar);
+        
+        // Get the debug object.
+        id = browser->getstringidentifier(funcName);
+        
+        // Invoke the call with the message!
+        NPVariant type;
+        STRINGZ_TO_NPVARIANT(message, type);
+        NPVariant args[] = { type };
+        NPVariant voidResponse;
+        browser->invoke(nppInstance, console, id, args,sizeof(args) / sizeof(args[0]),&voidResponse);
+        
+        // Cleanup all allocated objects, otherwise, reference count and
+        // memory leaks will happen.
+        browser->releaseobject(window);
+        browser->releasevariantvalue(&consoleVar);
+        browser->releasevariantvalue(&voidResponse);
+        
+        rc = true;
+    }
+    else
+    {
+        printf("StaticJSCallback: nppInstance is still null.\n");
+    }
+    return (rc);
+    
+}
+
 MyScriptableNPObject::MyScriptableNPObject(NPP instance)
 {
     instance_ = instance;
+    // not judging whether nppInstance is null?
+    nppInstance = instance;
 }
 
 // static
@@ -322,7 +371,7 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             printf("joinChat: Trying to join chatroom %s, under prefix %s, username %s.\n", chatroomName.UTF8Characters, hubPrefix.UTF8Characters, userName.UTF8Characters);
             
             // should do a startChronoChat with display callbacks
-            libInstance->startChronoChat(userName.UTF8Characters, hubPrefix.UTF8Characters, chatroomName.UTF8Characters);
+            libInstance->startChronoChat(userName.UTF8Characters, hubPrefix.UTF8Characters, chatroomName.UTF8Characters, &staticJsDisplayCallback, "console", "log");
             rc = true;
             inChat = true;
         }
@@ -376,12 +425,19 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
     return rc;
 }
 
-bool MyScriptableNPObject::debugWindowPrint()
+// this is not used for now, because using this would mean that I need to pass the NPP into ndnrtclibrary,
+// which should not care about objName, funcName, or NPP....
+bool MyScriptableNPObject::callbackStaticCast(const char *objName, const char *funcName, const char *message, void * this_pointer) {
+    MyScriptableNPObject * self = static_cast<MyScriptableNPObject*>(this_pointer);
+    return self->jsDisplayCallback(objName, funcName, message);
+}
+
+// for now, this function is not called except for direct debugging purposes, since this function is member, and has to be cast to static, with 'this' as calling parameter, too
+// a naive hack using a global NPP is used for actual display callback instead
+bool MyScriptableNPObject::jsDisplayCallback(const char *objName, const char *funcName, const char *message)
 {
-    printf("working\n");
+    printf("jsDisplayCallback called with argument objName %s, funcName %s, message %s\n", objName, funcName, message);
     bool rc = false;
-    // The message to send.
-    char* message = "Hello from C++";
     
     // Get window object.
     NPObject* window = NULL;
@@ -389,12 +445,12 @@ bool MyScriptableNPObject::debugWindowPrint()
     
     // Get console object.
     NPVariant consoleVar;
-    NPIdentifier id = browser->getstringidentifier("console");
+    NPIdentifier id = browser->getstringidentifier(objName);
     browser->getproperty(instance_, window, id, &consoleVar);
     NPObject* console = NPVARIANT_TO_OBJECT(consoleVar);
     
     // Get the debug object.
-    id = browser->getstringidentifier("log");
+    id = browser->getstringidentifier(funcName);
     
     // Invoke the call with the message!
     NPVariant type;
@@ -411,6 +467,12 @@ bool MyScriptableNPObject::debugWindowPrint()
     
     rc = true;
     return (rc);
+
+}
+
+bool MyScriptableNPObject::debugWindowPrint()
+{
+    return (jsDisplayCallback("console", "log", "Call JS from C++ works."));
 }
 
 //static

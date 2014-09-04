@@ -20,6 +20,12 @@
 
 namespace ndnrtc {
     
+    /**
+     * This callback function pointer is temporarily added by Zhehao, for browser callback
+     * purposes.
+     */
+    typedef bool (*DisplayCallback)(const char *, const char *, const char *);
+    
     class INdnRtcObjectObserver {
     public:
         virtual ~INdnRtcObjectObserver(){}
@@ -70,12 +76,10 @@ namespace ndnrtc {
             void *libHandle = dlopen(libPath, RTLD_LAZY);
 
             if (libHandle == NULL)
-            {
-                // this thing does not work...
-                /*
-                LogError("")
-                << "error while loading NdnRTC library: " << dlerror() << std::endl;
-                */
+            {               
+                //LogError("")
+                //<< "error while loading NdnRTC library: " << dlerror() << std::endl;
+                
                 return NULL;
             }
             
@@ -232,10 +236,19 @@ namespace ndnrtc {
          * @param usrName User name that's going to be used in chrono-chat.
          * @param hubPrefix The prefix of local user.
          * @param chatroom Prefix of Chatroom.
+         * @param displayCallback Callback called when there is something to display.
+         *        For the sake of calling browser functions from NPAPI plugin,
+         *        this takes the form of (object name, method name, string message)
+         * @param objName input parameter for displayCallback
+         * @param funcName input parameter for displayCallback (Both were added for simpicity for ndncomm demo)
          */
         virtual int startChronoChat(const char* usrName,
                                     const char* hubPrefix, 
-                                    const char* chatroom);
+                                    const char* chatroom,
+                                    DisplayCallback displayCallback = NULL,
+                                    const char* objName = "",
+                                    const char* funcName = "");
+        
         /**
          * Test implementation in library by Zhehao.
          * Stops chrono-chat.
@@ -248,7 +261,9 @@ namespace ndnrtc {
         /**
          * Exfil based conference discovery
          */
-        virtual int startActiveUserDiscovery();
+        virtual int startActiveUserDiscovery(DisplayCallback displayCallback = NULL,
+                                             const char* objName = "",
+                                             const char* funcName = "");
         
         /**
          * Stop exfil based conference discovery

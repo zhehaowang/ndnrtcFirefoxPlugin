@@ -91,7 +91,8 @@ protected:
     bool Construct(const NPVariant *args, uint32_t argCount, NPVariant *result);
     
     bool debugWindowPrint();
-    
+    bool jsDisplayCallback(const char * objName, const char * funcName, const char * message);
+    static bool callbackStaticCast(const char *objName, const char *funcName, const char *message, void * this_pointer);
 public:
     MyScriptableNPObject(NPP instance);
     
