@@ -14,8 +14,8 @@
 
 #include "basic-plugin.h"
 
-#define PLUGIN_METHOD_NUM 5
-#define PLUGIN_PROPERTY_NUM 6
+#define PLUGIN_METHOD_NUM 9
+#define PLUGIN_PROPERTY_NUM 8
 
 #define MAX_STRING_LENGTH 100
 
@@ -25,7 +25,11 @@ static const NPUTF8 *pluginMethodNames[PLUGIN_METHOD_NUM] = {
     "startPublishing",
     "stopPublishing",
     "startFetching",
-    "stopFetching"
+    "stopFetching",
+    "joinChat",
+    "leaveChat",
+    "startSpeakerDiscovery",
+    "stopSpeakerDiscovery"
 };
 
 enum {
@@ -33,7 +37,11 @@ enum {
     ID_START_PUBLISHING,
     ID_STOP_PUBLISHING,
     ID_START_FETCHING,
-    ID_STOP_FETCHING
+    ID_STOP_FETCHING,
+    ID_JOIN_CHAT,
+    ID_LEAVE_CHAT,
+    ID_START_SPEAKER_DISCOVERY,
+    ID_STOP_SPEAKER_DISCOVERY
 };
 
 extern NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
@@ -43,7 +51,9 @@ static const NPUTF8 *pluginPropertyNames[PLUGIN_PROPERTY_NUM] = {
     "fetchingNum",
     "renderWindowNum",
     "defaultWindowWidth",
-    "defaultWindowHeight"
+    "defaultWindowHeight",
+    "inChat",
+    "inDiscovery"
 };
 
 enum {
@@ -52,7 +62,9 @@ enum {
     ID_FETCHING_NUM,
     ID_RENDER_WINDOW_NUM,
     ID_DEFAULT_WINDOW_WIDTH,
-    ID_DEFAULT_WINDOW_HEIGHT
+    ID_DEFAULT_WINDOW_HEIGHT,
+    ID_IN_CHAT,
+    ID_IN_DISCOVERY
 };
 
 extern char *versionStr;
@@ -77,6 +89,8 @@ protected:
     bool RemoveProperty(NPIdentifier name);
     bool Enumerate(NPIdentifier **identifier, uint32_t *count);
     bool Construct(const NPVariant *args, uint32_t argCount, NPVariant *result);
+    
+    bool debugWindowPrint();
     
 public:
     MyScriptableNPObject(NPP instance);

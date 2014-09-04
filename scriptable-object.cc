@@ -303,11 +303,113 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
         }
         else
         {
-            printf("stopPublish: Wrong number of arguments");
+            printf("stopPublish: Wrong number of arguments.\n");
             BOOLEAN_TO_NPVARIANT(false, *result);
         }
     }
+    if (name == pluginMethods[ID_JOIN_CHAT])
+    {
+        if (inChat)
+        {
+            printf("joinChat: already in chat.\n");
+            rc = false;
+        }
+        else
+        {
+            NPString userName = NPVARIANT_TO_STRING(args[0]);
+            NPString hubPrefix = NPVARIANT_TO_STRING(args[1]);
+            NPString chatroomName = NPVARIANT_TO_STRING(args[2]);
+            printf("joinChat: Trying to join chatroom %s, under prefix %s, username %s.\n", chatroomName.UTF8Characters, hubPrefix.UTF8Characters, userName.UTF8Characters);
+            
+            // should do a startChronoChat with display callbacks
+            libInstance->startChronoChat(userName.UTF8Characters, hubPrefix.UTF8Characters, chatroomName.UTF8Characters);
+            rc = true;
+            inChat = true;
+        }
+    }
+    if (name == pluginMethods[ID_LEAVE_CHAT])
+    {
+        if (inChat)
+        {
+            printf("leaveChat: leaving chat");
+            libInstance->stopChronoChat();
+            rc = true;
+            inChat = false;
+        }
+        else
+        {
+            printf("leaveChat: not in chat.\n");
+            rc = false;
+        }
+    }
+    if (name == pluginMethods[ID_START_SPEAKER_DISCOVERY])
+    {
+        if (inDiscovery)
+        {
+            printf("startDiscovery: already discoverying.\n");
+            rc = false;
+        }
+        else
+        {
+            printf("startDiscovery: starting discovery.\n");
+            // Should do a startActiveUserDiscovery with display callbacks
+            libInstance->startActiveUserDiscovery();
+            rc = true;
+            inDiscovery = true;
+        }
+    }
+    if (name == pluginMethods[ID_STOP_SPEAKER_DISCOVERY])
+    {
+        if (inDiscovery)
+        {
+            printf("stopDiscovery: stopping discovery.\n");
+            libInstance->stopActiveUserDiscovery();
+            inDiscovery = false;
+            rc = true;
+        }
+        else
+        {
+            printf("stopDiscovery: not in discovery.\n");
+            rc = false;
+        }
+    }
+    return rc;
+}
+
+bool MyScriptableNPObject::debugWindowPrint()
+{
+    printf("working\n");
+    bool rc = false;
+    // The message to send.
+    char* message = "Hello from C++";
     
+    // Get window object.
+    NPObject* window = NULL;
+    browser->getvalue(instance_, NPNVWindowNPObject, &window);
+    
+    // Get console object.
+    NPVariant consoleVar;
+    NPIdentifier id = browser->getstringidentifier("console");
+    browser->getproperty(instance_, window, id, &consoleVar);
+    NPObject* console = NPVARIANT_TO_OBJECT(consoleVar);
+    
+    // Get the debug object.
+    id = browser->getstringidentifier("log");
+    
+    // Invoke the call with the message!
+    NPVariant type;
+    STRINGZ_TO_NPVARIANT(message, type);
+    NPVariant args[] = { type };
+    NPVariant voidResponse;
+    browser->invoke(instance_, console, id, args,sizeof(args) / sizeof(args[0]),&voidResponse);
+    
+    // Cleanup all allocated objects, otherwise, reference count and
+    // memory leaks will happen.
+    browser->releaseobject(window);
+    browser->releasevariantvalue(&consoleVar);
+    browser->releasevariantvalue(&voidResponse);
+    
+    rc = true;
     return (rc);
 }
 
@@ -395,7 +497,16 @@ bool MyScriptableNPObject::GetProperty(NPIdentifier name, NPVariant *result)
         INT32_TO_NPVARIANT(defaultWindowHeight, *result);
         rc = true;
     }
-    
+    if (name == pluginProperties[ID_IN_CHAT])
+    {
+        BOOLEAN_TO_NPVARIANT(inChat, *result);
+        rc = true;
+    }
+    if (name == pluginProperties[ID_IN_DISCOVERY])
+    {
+        BOOLEAN_TO_NPVARIANT(inDiscovery, *result);
+        rc = true;
+    }
     return rc;
 }
 

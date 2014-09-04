@@ -69,6 +69,9 @@ extern int fetchingNum;
 const size_t defaultWindowWidth = 640;
 const size_t defaultWindowHeight = 480;
 
+extern bool inChat;
+extern bool inDiscovery;
+
 #pragma GCC visibility push(default)
 extern "C" {
     NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);

@@ -46,6 +46,10 @@ int publishingNum = -1;
 // fetchNum is the total number of running consumers.
 int fetchingNum = 0;
 
+// chat is off by default, and discovery is on by default
+bool inChat = false;
+bool inDiscovery = true;
+
 /* Symbol called once by the browser to initialize the plugin. */
 NPError NP_Initialize(NPNetscapeFuncs* browserFuncs)
 {
@@ -111,10 +115,28 @@ static void setNdnrtcDefaultConfiguration()
     
     libInstance->getDefaultParams(videoParams, audioParams);
     
+    CodecParams videoStreamCodec;
+    videoStreamCodec.idx = 0;
+    videoStreamCodec.codecFrameRate = 30;
+    videoStreamCodec.gop = 30;
+    
+    videoStreamCodec.startBitrate = 500;
+    videoStreamCodec.encodeWidth = 640;
+    videoStreamCodec.encodeHeight = 480;
+    
+    videoStreamCodec.maxBitrate = 0;
+    
+    CodecParams audioStreamCodec;
+    audioStreamCodec.startBitrate = 90;
+    
+    videoParams.addNewStream(videoStreamCodec);
+    
+    audioParams.addNewStream(audioStreamCodec);
+    
     videoParams.producerId = "zhehao";
     
     videoParams.useFec = false;
-    videoParams.segmentSize = 800;
+    videoParams.segmentSize = 1000;
     
     videoParams.ndnHub = "ndn/edu/ucla/remap";
     videoParams.loggingLevel = ndnlog::NdnLoggerDetailLevelAll;
