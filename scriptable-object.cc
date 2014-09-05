@@ -11,6 +11,10 @@
 
 #include "browser-renderer.h"
 
+// quick test for showing chat messages
+#define MAX_CHAT_MSG 1000
+#define MAX_CHAT_LEN 1000
+
 using namespace ndnrtc;
 
 NPIdentifier pluginMethods[PLUGIN_METHOD_NUM];
@@ -19,6 +23,12 @@ NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
 char * versionStr = NULL;
 
 NPP nppInstance = NULL;
+
+char chatMsgs[MAX_CHAT_MSG][MAX_CHAT_LEN];
+int chatMsgTop = 0;
+
+char listMsg[MAX_CHAT_LEN];
+int listTop = 0;
 
 /* Timer func is called every interval. In each timer func a paint event is fired. */
 void refreshTimerFunc(NPP instance, uint32_t timerID)
@@ -403,7 +413,7 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
         {
             printf("startDiscovery: starting discovery.\n");
             // Should do a startActiveUserDiscovery with display callbacks
-            libInstance->startActiveUserDiscovery();
+            libInstance->startActiveUserDiscovery(&MyScriptableNPObject::rewriteCallbackStaticCast);
             rc = true;
             inDiscovery = true;
         }
@@ -423,27 +433,54 @@ bool MyScriptableNPObject::Invoke(NPIdentifier name, const NPVariant *args, uint
             rc = false;
         }
     }
+    if (name == pluginMethods[ID_GET_NEW_CHAT_MESSAGES])
+    {
+        int chatNum = NPVARIANT_TO_INT32(args[0]);
+        if (chatNum < chatMsgTop)
+        {
+            for (int i = chatNum; i < chatMsgTop; i++)
+            {
+                jsDisplayCallback("chatMsgObj", "addMsg", chatMsgs[i]);
+            }
+        }
+        
+        INT32_TO_NPVARIANT(chatMsgTop, *result);
+        rc = true;
+    }
+    if (name == pluginMethods[ID_GET_NEW_SPEAKER_LIST])
+    {
+        int listNum = NPVARIANT_TO_INT32(args[0]);
+        if (listNum < listTop)
+        {
+            jsDisplayCallback("chatMsgObj", "setMsg", listMsg);
+        }
+        INT32_TO_NPVARIANT(listTop, *result);
+        rc = true;
+    }
     return rc;
 }
 
 // this is not used for now, because using this would mean that I need to pass the NPP into ndnrtclibrary,
 // which should not care about objName, funcName, or NPP....
-bool MyScriptableNPObject::callbackStaticCast(const char *objName, const char *funcName, const char *message, void * this_pointer) {
+bool MyScriptableNPObject::callbackStaticCast(const char *objName, const char *funcName, const char *message, void * this_pointer)
+{
     MyScriptableNPObject * self = static_cast<MyScriptableNPObject*>(this_pointer);
-    return self->jsDisplayCallback(objName, funcName, message);
+    return self->jsAppendCallback(objName, funcName, message);
 }
 
-// for now, this function is not called except for direct debugging purposes, since this function is member, and has to be cast to static, with 'this' as calling parameter, too
-// a naive hack using a global NPP is used for actual display callback instead
-//
-// hum...wondering why this does not work...consider using similar strategy with the external renderer class in ndnrtc.
-// Could it be that instance_ is no longer valid, another scriptable object is being requested?
+bool MyScriptableNPObject::rewriteCallbackStaticCast(const char *objName, const char *funcName, const char *message, void * this_pointer)
+{
+    MyScriptableNPObject * self = static_cast<MyScriptableNPObject*>(this_pointer);
+    return self->jsRewriteCallback(objName, funcName, message);
+}
+
+
 bool MyScriptableNPObject::jsDisplayCallback(const char *objName, const char *funcName, const char *message)
 {
-    printf("jsDisplayCallback called with argument objName %s, funcName %s, message %s\n", objName, funcName, message);
     bool rc = false;
-    
+    /*** Thi following part does not work in callback ***/
     // Get window object.
+    
     NPObject* window = NULL;
     browser->getvalue(instance_, NPNVWindowNPObject, &window);
     
@@ -468,10 +505,42 @@ bool MyScriptableNPObject::jsDisplayCallback(const char *objName, const char *fu
     browser->releaseobject(window);
     browser->releasevariantvalue(&consoleVar);
     browser->releasevariantvalue(&voidResponse);
+    rc = true;
+    return (rc);
+}
+
+// for now, this function is not called except for direct debugging purposes, since this function is member, and has to be cast to static, with 'this' as calling parameter, too
+// a naive hack using a global NPP is used for actual display callback instead
+//
+// hum...wondering why this does not work...consider using similar strategy with the external renderer class in ndnrtc.
+// Could it be that instance_ is no longer valid, another scriptable object is being requested?
+bool MyScriptableNPObject::jsAppendCallback(const char *objName, const char *funcName, const char *message)
+{
+    printf("jsAppendCallback called with argument objName %s, funcName %s, message %s\n", objName, funcName, message);
+    bool rc = false;
+    
+    // This is not thread-safe
+    strcpy(chatMsgs[chatMsgTop], message);
+    chatMsgTop ++;
     
     rc = true;
     return (rc);
 
+}
+
+bool MyScriptableNPObject::jsRewriteCallback(const char *objName, const char *funcName, const char *message)
+{
+    printf("jsRewriteCallback called with argument objName %s, funcName %s, message %s\n", objName, funcName, message);
+    bool rc = false;
+    
+    // This is not thread-safe
+    memset(listMsg, 0, MAX_CHAT_LEN);
+    strcpy(listMsg, message);
+    listTop ++;
+    
+    rc = true;
+    return (rc);
+    
 }
 
 bool MyScriptableNPObject::debugWindowPrint()

@@ -14,7 +14,7 @@
 
 #include "basic-plugin.h"
 
-#define PLUGIN_METHOD_NUM 9
+#define PLUGIN_METHOD_NUM 11
 #define PLUGIN_PROPERTY_NUM 8
 
 #define MAX_STRING_LENGTH 100
@@ -29,7 +29,9 @@ static const NPUTF8 *pluginMethodNames[PLUGIN_METHOD_NUM] = {
     "joinChat",
     "leaveChat",
     "startSpeakerDiscovery",
-    "stopSpeakerDiscovery"
+    "stopSpeakerDiscovery",
+    "getNewChatMessages",
+    "getNewSpeakerList"
 };
 
 enum {
@@ -41,7 +43,9 @@ enum {
     ID_JOIN_CHAT,
     ID_LEAVE_CHAT,
     ID_START_SPEAKER_DISCOVERY,
-    ID_STOP_SPEAKER_DISCOVERY
+    ID_STOP_SPEAKER_DISCOVERY,
+    ID_GET_NEW_CHAT_MESSAGES,
+    ID_GET_NEW_SPEAKER_LIST
 };
 
 extern NPIdentifier pluginProperties[PLUGIN_PROPERTY_NUM];
@@ -91,8 +95,14 @@ protected:
     bool Construct(const NPVariant *args, uint32_t argCount, NPVariant *result);
     
     bool debugWindowPrint();
-    bool jsDisplayCallback(const char * objName, const char * funcName, const char * message);
+    
+    bool jsAppendCallback(const char * objName, const char * funcName, const char * message);
+    bool jsRewriteCallback(const char * objName, const char * funcName, const char * message);
+    
     static bool callbackStaticCast(const char *objName, const char *funcName, const char *message, void * this_pointer);
+    static bool rewriteCallbackStaticCast(const char *objName, const char *funcName, const char *message, void * this_pointer);
+    
+    bool jsDisplayCallback(const char * objName, const char * funcName, const char * message);
 public:
     MyScriptableNPObject(NPP instance);
     

@@ -48,7 +48,7 @@ int fetchingNum = 0;
 
 // chat is off by default, and discovery is on by default
 bool inChat = false;
-bool inDiscovery = true;
+bool inDiscovery = false;
 
 /* Symbol called once by the browser to initialize the plugin. */
 NPError NP_Initialize(NPNetscapeFuncs* browserFuncs)
